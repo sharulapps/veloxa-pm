@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VELOXA — Admin Panel</title>
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f4f6fb;color:#0d1526;font-size:13px;min-height:100vh}
+/* Topbar */
+.topbar{height:54px;background:#0d1526;display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:50}
+.logo-wrap{display:flex;align-items:center;gap:10px}
+.logo-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;letter-spacing:2.5px;color:#fff}
+.topbar-badge{font-size:9px;background:rgba(37,99,235,0.25);color:#60a5fa;padding:2px 7px;border-radius:4px;font-weight:700;letter-spacing:0.5px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.topbar-user{font-size:12px;color:rgba(255,255,255,0.4)}
+.btn-logout{padding:5px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:rgba(255,255,255,0.5);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
+.btn-logout:hover{background:rgba(220,38,38,0.15);color:#f87171;border-color:rgba(220,38,38,0.3)}
+.app-link{padding:5px 12px;background:rgba(37,99,235,0.2);border:1px solid rgba(37,99,235,0.3);border-radius:7px;color:#60a5fa;font-size:12px;cursor:pointer;text-decoration:none;font-family:'Inter',sans-serif}
+/* Layout */
+.page{max-width:1100px;margin:0 auto;padding:28px 24px}
+.page-title{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;letter-spacing:1px;color:#0d1526;margin-bottom:4px}
+.page-sub{font-size:13px;color:#6b7280;margin-bottom:24px}
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:2px solid #dde2f0;margin-bottom:24px}
+.tab{padding:10px 20px;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s}
+.tab:hover{color:#0d1526}
+.tab.active{color:#1a56db;border-bottom-color:#1a56db;font-weight:600}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+/* Cards */
+.card{background:white;border:1px solid #dde2f0;border-radius:12px;padding:22px;box-shadow:0 1px 3px rgba(13,21,38,0.06)}
+.card+.card{margin-top:16px}
+.card-title{font-size:14px;font-weight:700;color:#0d1526;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+/* Form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field.full{grid-column:1/-1}
+.label{font-size:11px;font-weight:700;color:#4a5578;text-transform:uppercase;letter-spacing:0.5px}
+.input{padding:9px 12px;border:1.5px solid #dde2f0;border-radius:9px;font-size:13px;font-family:'Inter',sans-serif;color:#0d1526;outline:none;background:white;transition:all 0.2s}
+.input:focus{border-color:#1a56db;box-shadow:0 0 0 3px rgba(26,86,219,0.08)}
+select.input{cursor:pointer}
+.btn{padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:all 0.15s}
+.btn-primary{background:linear-gradient(135deg,#1a56db,#2563eb);color:white;box-shadow:0 2px 8px rgba(26,86,219,0.25)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(26,86,219,0.35)}
+.btn-primary:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.btn-ghost{background:white;color:#4a5578;border:1.5px solid #dde2f0}
+.btn-ghost:hover{border-color:#1a56db;color:#1a56db}
+.btn-danger{background:white;color:#dc2626;border:1.5px solid #fecaca}
+.btn-danger:hover{background:#fee2e2}
+/* Alert */
+.alert{padding:10px 14px;border-radius:9px;font-size:12px;margin-bottom:14px;font-weight:500}
+.alert-err{background:#fee2e2;color:#dc2626;border:1px solid #fecaca}
+.alert-ok{background:#d1fae5;color:#059669;border:1px solid #a7f3d0}
+.alert-info{background:#dbeafe;color:#1a56db;border:1px solid #bfdbfe}
+/* User table */
+.user-table{width:100%;border-collapse:collapse}
+.user-table th{text-align:left;padding:10px 12px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;background:#f4f6fb;border-bottom:1px solid #dde2f0}
+.user-table td{padding:11px 12px;border-bottom:1px solid #f0f2f8;vertical-align:middle}
+.user-table tr:last-child td{border-bottom:none}
+.user-table tr:hover td{background:#f8f9ff}
+.av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0}
+.user-info{display:flex;align-items:center;gap:10px}
+.user-email{font-size:11px;color:#9ba3c4}
+.role-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px}
+.role-admin{background:#dbeafe;color:#1a56db}
+.role-manager{background:#ede9fe;color:#7c3aed}
+.role-engineer{background:#d1fae5;color:#059669}
+.role-technician{background:#fef3c7;color:#d97706}
+.role-ceo{background:#0d1526;color:#60a5fa}
+.role-director{background:#1e1b4b;color:#a5b4fc}
+.role-gm{background:#1e3a1e;color:#4ade80}
+.status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px}
+.status-active{background:#059669}
+.status-inactive{background:#dc2626}
+/* Action bar */
+.action-bar{display:flex;gap:6px}
+.btn-sm{padding:5px 10px;font-size:11px;font-weight:600;border-radius:6px;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:all 0.15s}
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:white;border:1px solid #dde2f0;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(13,21,38,0.04)}
+.stat-num{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;line-height:1;color:#0d1526}
+.stat-lbl{font-size:11px;color:#6b7280;margin-top:3px;font-weight:500}
+.stat-sub{font-size:10px;margin-top:4px;font-weight:600}
+/* Loading */
+.loading{text-align:center;padding:40px;color:#9ba3c4}
+.spinner{width:28px;height:28px;border:3px solid #dde2f0;border-top-color:#1a56db;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(13,21,38,0.4);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-bg.open{display:flex}
+.modal{background:white;border-radius:14px;padding:24px;width:420px;box-shadow:0 16px 48px rgba(13,21,38,0.2)}
+.modal-title{font-size:16px;font-weight:700;color:#0d1526;margin-bottom:14px}
+.modal-footer{display:flex;gap:8px;margin-top:18px;justify-content:flex-end}
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="logo-wrap">
+    <svg width="30" height="30" viewBox="0 0 100 100" fill="none">
+      <defs>
+        <linearGradient id="tbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0f1e3d"/><stop offset="100%" stop-color="#0a1628"/></linearGradient>
+        <linearGradient id="tl" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1a3a7a"/><stop offset="100%" stop-color="#1a56db"/></linearGradient>
+        <linearGradient id="tr" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#60a5fa"/></linearGradient>
+      </defs>
+      <rect width="100" height="100" rx="22" fill="url(#tbg)"/>
+      <path d="M15,15 L36,15 L50,68 L40,68 Z" fill="url(#tl)"/>
+      <path d="M85,15 L64,15 L50,68 L60,68 Z" fill="url(#tr)"/>
+      <path d="M44,15 L56,15 L52,34 L48,34 Z" fill="url(#tbg)" opacity="0.9"/>
+    </svg>
+    <span class="logo-name">VELOXA</span>
+    
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-user" id="admin-email"></span>
+    <a href="app.html" class="app-link">→ Main App</a>
+    <button class="btn-logout" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
+
+<!-- Page -->
+<div class="page">
+  <div class="page-title">⚙️ Admin Panel</div>
+  <div class="page-sub">Manage users, projects and VELOXA system settings</div>
+
+  <!-- Stats -->
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card"><div class="stat-num" id="s-users">—</div><div class="stat-lbl">Total Users</div><div class="stat-sub" style="color:#1a56db" id="s-active">— active</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-projects">—</div><div class="stat-lbl">Project</div><div class="stat-sub" style="color:#059669">Workspace MNSB</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-tasks">—</div><div class="stat-lbl">Tasks</div><div class="stat-sub" style="color:#d97706" id="s-overdue">— overdue</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-roles">—</div><div class="stat-lbl">Roles</div><div class="stat-sub" style="color:#7c3aed">7 roles available</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchAdminTab('users',this)">👥 Users</div>
+    <div class="tab" onclick="switchAdminTab('register',this)">➕ Register User</div>
+    <div class="tab" onclick="switchAdminTab('projects',this)">📁 Project</div>
+    <div class="tab" onclick="switchAdminTab('roles',this)">🔐 Roles</div>
+    <div class="tab" onclick="switchAdminTab('settings',this);loadSettings()">⚙️ Settings</div>
+  </div>
+
+  <!-- USERS TAB -->
+  <div class="tab-panel active" id="tab-users">
+    <div class="card">
+      <div class="card-title">👥 User List
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <input class="input" id="search-user" placeholder="🔍 Search users..." style="width:200px;padding:6px 10px" oninput="filterUsers(this.value)">
+          <button class="btn btn-ghost" onclick="loadUsers()">↻ Refresh</button>
+        </div>
+      </div>
+      <div id="users-loading" class="loading"><div class="spinner"></div>Loading users...</div>
+      <table class="user-table" id="users-table" style="display:none">
+        <thead>
+          <tr>
+            <th>User</th><th>Role</th><th>Status</th><th>Plant</th><th>Created</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- REGISTER TAB -->
+  <div class="tab-panel" id="tab-register">
+    <div class="card">
+      <div class="card-title">➕ Register New User</div>
+      <div id="reg-alert"></div>
+      <div class="form-grid">
+        <div class="field">
+          <label class="label">Full Name</label>
+          <input class="input" id="reg-name" placeholder="Ahmad bin Abdullah">
+        </div>
+        <div class="field">
+          <label class="label">Email</label>
+          <input class="input" type="email" id="reg-email" placeholder="ahmad@mnsb.com">
+        </div>
+        <div class="field">
+          <label class="label">Employee No. / ID</label>
+          <input class="input" id="reg-empid" placeholder="EMP001">
+        </div>
+        <div class="field">
+          <label class="label">Department</label>
+          <input class="input" id="reg-dept" placeholder="Maintenance / Production">
+        </div>
+        <div class="field">
+          <label class="label">Role</label>
+          <select class="input" id="reg-role">
+            <option value="engineer">Engineer</option>
+            <option value="technician">Technician</option>
+            <option value="manager">Manager</option>
+            <option value="admin">Admin</option>
+            <option value="director">Director</option>
+            <option value="gm">General Manager</option>
+            <option value="ceo">CEO</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label">Temporary Password</label>
+          <input class="input" type="text" id="reg-pass" placeholder="Min 8 characters" value="Veloxa@2026">
+        </div>
+        <div class="field">
+          <label class="label">Project (can be assigned later)</label>
+          <select class="input" id="reg-project">
+            <option value="">— No project —</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label">Plant / Location</label>
+          <select class="input" id="reg-plant">
+            <option value="HQ">HQ</option>
+            <option value="M1">Plant M1</option>
+            <option value="M3">Plant M3</option>
+            <option value="Kulim">Kulim</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+        <input type="checkbox" id="reg-send-email" checked style="width:14px;height:14px">
+        <label for="reg-send-email" style="font-size:13px;color:#4a5578;cursor:pointer">Send welcome email with login credentials to the user</label>
+      </div>
+      <div style="margin-top:16px">
+        <button class="btn btn-primary" id="reg-btn" onclick="registerUser()">Register & Send Welcome Email</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROJECTS TAB -->
+  <div class="tab-panel" id="tab-projects">
+    <div class="card">
+      <div class="card-title">📁 Manage Projects</div>
+      <div id="proj-alert"></div>
+      <div class="form-grid-3" style="margin-bottom:16px">
+        <div class="field">
+          <label class="label">Project Name</label>
+          <input class="input" id="proj-name" placeholder="MNSB Plant Recovery">
+        </div>
+        <div class="field">
+          <label class="label">Color</label>
+          <select class="input" id="proj-color">
+            <option value="#dc2626">🔴 Red</option>
+            <option value="#1a56db">🔵 Blue</option>
+            <option value="#059669">🟢 Green</option>
+            <option value="#d97706">🟡 Yellow</option>
+            <option value="#7c3aed">🟣 Purple</option>
+          </select>
+        </div>
+        <div class="field" style="justify-content:flex-end">
+          <label class="label">&nbsp;</label>
+          <button class="btn btn-primary" onclick="createProject()">+ Create Project</button>
+        </div>
+      </div>
+      <div id="projects-list"></div>
+    </div>
+  </div>
+
+  <!-- ROLES TAB -->
+  <div class="tab-panel" id="tab-roles">
+    <div class="card">
+      <div class="card-title">🔐 Role Permissions</div>
+      <table class="user-table">
+        <thead><tr><th>Role</th><th>Table/Kanban/Timeline</th><th>Dashboard Project</th><th>Exec Dashboard</th><th>Admin Panel</th><th>MOM</th></tr></thead>
+        <tbody>
+          <tr><td><span class="role-badge role-ceo">CEO</span></td><td>❌</td><td>❌</td><td>✅ All workspace</td><td>❌</td><td>Read only</td></tr>
+          <tr><td><span class="role-badge role-director">Director</span></td><td>❌</td><td>❌</td><td>✅ All workspace</td><td>❌</td><td>Read only</td></tr>
+          <tr><td><span class="role-badge role-gm">GM</span></td><td>❌</td><td>❌</td><td>✅ All workspace</td><td>❌</td><td>Read only</td></tr>
+          <tr><td><span class="role-badge role-admin">Admin</span></td><td>✅ All</td><td>✅ All</td><td>✅ All</td><td>✅ Full</td><td>✅ Full</td></tr>
+          <tr><td><span class="role-badge role-manager">Manager</span></td><td>✅ Own projects</td><td>✅ Own projects</td><td>❌</td><td>❌</td><td>✅ Own projects</td></tr>
+          <tr><td><span class="role-badge role-engineer">Engineer</span></td><td>✅ Own projects</td><td>✅ Own projects</td><td>❌</td><td>❌</td><td>✅ Own projects</td></tr>
+          <tr><td><span class="role-badge role-technician">Technician</span></td><td>✅ Own tasks only</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Role Modal -->
+<div class="modal-bg" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title">✏️ Edit User</div>
+    <input type="hidden" id="edit-uid">
+    <div class="field" style="margin-bottom:12px">
+      <label class="label">Name</label>
+      <input class="input" id="edit-name">
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label class="label">Role</label>
+      <select class="input" id="edit-role">
+        <option value="technician">Technician</option>
+        <option value="engineer">Engineer</option>
+        <option value="manager">Manager</option>
+        <option value="admin">Admin</option>
+        <option value="director">Director</option>
+        <option value="gm">General Manager</option>
+        <option value="ceo">CEO</option>
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label class="label">Plant</label>
+      <select class="input" id="edit-plant">
+        <option value="HQ">HQ</option><option value="M1">Plant M1</option>
+        <option value="M3">Plant M3</option><option value="Kulim">Kulim</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="label">Status</label>
+      <select class="input" id="edit-status">
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeEdit()">Cancel</button>
+      <button class="btn btn-danger" onclick="sendPasswordReset()">🔑 Reset Password</button>
+      <button class="btn btn-primary" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+// Email via Cloudflare Worker + Resend
+
+let allUsers = [];
+let projects = [];
+const EXEC_ROLES = ['ceo','director','gm'];
+const ADMIN_ROLES = ['admin','superadmin'];
+
+// Auth guard
+auth.onAuthStateChanged(async user => {
+  if (!user) { window.location.href = 'index.html'; return; }
+  const doc = await db.collection('users').doc(user.uid).get();
+  if (!doc.exists || !ADMIN_ROLES.includes(doc.data().role)) {
+    window.location.href = 'index.html'; return;
+  }
+  document.getElementById('admin-email').textContent = user.email;
+  loadUsers();
+  loadProjects();
+  loadStats();
+});
+
+function doLogout() { auth.signOut().then(()=>window.location.href='index.html'); }
+
+// Tab switching
+function switchAdminTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+// Stats
+async function loadStats() {
+  try {
+    const usersSnap = await db.collection('users').get();
+    const active = usersSnap.docs.filter(d=>d.data().status!=='inactive').length;
+    document.getElementById('s-users').textContent = usersSnap.size;
+    document.getElementById('s-active').textContent = active + ' active';
+    const projSnap = await db.collection('workspaces').doc('default').collection('projects').get();
+    document.getElementById('s-projects').textContent = projSnap.size;
+    const roleSet = new Set(usersSnap.docs.map(d=>d.data().role).filter(Boolean));
+    document.getElementById('s-roles').textContent = roleSet.size;
+  } catch(e) { console.log(e); }
+}
+
+// Load Users
+async function loadUsers() {
+  document.getElementById('users-loading').style.display = 'block';
+  document.getElementById('users-table').style.display = 'none';
+  try {
+    const snap = await db.collection('users').orderBy('createdAt','desc').get();
+    allUsers = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderUsers(allUsers);
+  } catch(e) {
+    document.getElementById('users-loading').innerHTML = '<div style="color:#dc2626">Error: '+e.message+'</div>';
+  }
+}
+
+function renderUsers(users) {
+  document.getElementById('users-loading').style.display = 'none';
+  document.getElementById('users-table').style.display = 'table';
+  const tbody = document.getElementById('users-tbody');
+  tbody.innerHTML = '';
+  if (users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#9ba3c4">No users found</td></tr>';
+    return;
+  }
+  const COLORS = ['#1a56db','#dc2626','#059669','#7c3aed','#d97706','#ea580c','#06b6d4'];
+  users.forEach((u,i) => {
+    const initials = (u.name||u.email||'?').split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2);
+    const color = COLORS[i % COLORS.length];
+    const created = u.createdAt?.toDate ? u.createdAt.toDate().toLocaleDateString('en-MY') : '—';
+    const isActive = u.status !== 'inactive';
+    const roleClass = 'role-'+(u.role||'engineer');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="user-info">
+        <div class="av" style="background:${color}">${initials}</div>
+        <div><div style="font-weight:500;color:#0d1526">${u.name||'—'}</div><div class="user-email">${u.email||'—'} ${u.empId?'· '+u.empId:''}</div></div>
+      </div></td>
+      <td><span class="role-badge ${roleClass}">${u.role||'—'}</span></td>
+      <td><span class="status-dot ${isActive?'status-active':'status-inactive'}"></span>${isActive?'Active':'Inactive'}</td>
+      <td style="font-size:12px;color:#6b7280">${u.plant||'—'}</td>
+      <td style="font-size:11px;color:#9ba3c4">${created}</td>
+      <td><div class="action-bar">
+        <button class="btn-sm btn-ghost" style="border:1px solid #dde2f0" onclick="openEdit('${u.id}','${u.name||''}','${u.role||'engineer'}','${u.plant||'HQ'}','${u.status||'active'}')">✏️ Edit</button>
+        <button class="btn-sm btn-danger" style="border:1px solid #fecaca;background:none;color:#dc2626" onclick="deleteUser('${u.id}','${u.name||u.email}')">🗑</button>
+      </div></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function filterUsers(q) {
+  const filtered = allUsers.filter(u =>
+    (u.name||'').toLowerCase().includes(q.toLowerCase()) ||
+    (u.email||'').toLowerCase().includes(q.toLowerCase()) ||
+    (u.role||'').toLowerCase().includes(q.toLowerCase())
+  );
+  renderUsers(filtered);
+}
+
+// Register User
+async function registerUser() {
+  const name    = document.getElementById('reg-name').value.trim();
+  const email   = document.getElementById('reg-email').value.trim();
+  const pass    = document.getElementById('reg-pass').value.trim();
+  const role    = document.getElementById('reg-role').value;
+  const dept    = document.getElementById('reg-dept').value.trim();
+  const empId   = document.getElementById('reg-empid').value.trim();
+  const plant   = document.getElementById('reg-plant').value;
+  const projId  = document.getElementById('reg-project').value;
+  const sendEmail = document.getElementById('reg-send-email').checked;
+  const alertEl = document.getElementById('reg-alert');
+
+  if (!name || !email || !pass) {
+    alertEl.innerHTML = '<div class="alert alert-err">⚠️ Please fill in Name, Email and Password.</div>';
+    return;
+  }
+  if (pass.length < 8) {
+    alertEl.innerHTML = '<div class="alert alert-err">⚠️ Password must be at least 8 characters.</div>';
+    return;
+  }
+
+  const btn = document.getElementById('reg-btn');
+  btn.disabled = true; btn.textContent = 'Registering...';
+  alertEl.innerHTML = '';
+
+  try {
+    // Create secondary app to avoid signing out current admin
+    const secondary = firebase.initializeApp(FIREBASE_CONFIG, 'secondary_'+Date.now());
+    const secAuth = secondary.auth();
+    const cred = await secAuth.createUserWithEmailAndPassword(email, pass);
+    const uid = cred.user.uid;
+    await cred.user.updateProfile({ displayName: name });
+
+    // Save to Firestore
+    await db.collection('users').doc(uid).set({
+      name, email, role, dept, empId, plant,
+      status: 'active',
+      workspaceId: 'default',
+      projectIds: projId ? [projId] : [],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdBy: auth.currentUser.uid,
+    });
+
+    // Add to project members if selected
+    if (projId) {
+      await db.collection('workspaces').doc('default').collection('projects').doc(projId)
+        .update({ [`members.${uid}`]: role });
+    }
+
+    await secAuth.signOut();
+    secondary.delete();
+
+    // Send welcome email via Cloudflare Worker + Resend
+    if (sendEmail) {
+      try {
+        const workerUrl = RESEND_CONFIG?.workerUrl || '';
+        if (!workerUrl) throw new Error('WORKER_URL not configured in firebase-config.js');
+        const res = await fetch(workerUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type:      'welcome',
+            to_name:   name,
+            to_email:  email,
+            temp_pass: pass,
+            role:      role,
+            company:   APP_CONFIG.companyName,
+            login_url: window.location.origin + '/index.html',
+            admin_email: APP_CONFIG.adminEmail,
+          })
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Worker error');
+        alertEl.innerHTML = `<div class="alert alert-ok">✅ User <strong>${name}</strong> registered and welcome email sent to ${email}. (ID: ${result.id})</div>`;
+      } catch(emailErr) {
+        alertEl.innerHTML = `<div class="alert alert-ok">✅ User <strong>${name}</strong> registered.<br>⚠️ Welcome email failed: ${emailErr.message}</div>`;
+      }
+    } else {
+      alertEl.innerHTML = `<div class="alert alert-ok">✅ User <strong>${name}</strong> registered.</div>`;
+    }
+
+    // Clear form
+    ['reg-name','reg-email','reg-dept','reg-empid'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('reg-pass').value='Veloxa@2026';
+    loadUsers(); loadStats();
+
+  } catch(e) {
+    const ERR = {
+      'auth/email-already-in-use': 'This email is already registered.',
+      'auth/weak-password': 'Password is too weak.',
+      'auth/invalid-email': 'Invalid email format.',
+    };
+    alertEl.innerHTML = `<div class="alert alert-err">❌ ${ERR[e.code]||e.message}</div>`;
+  }
+  btn.disabled = false; btn.textContent = 'Register & Send Welcome Email';
+}
+
+// Edit user
+function openEdit(uid, name, role, plant, status) {
+  document.getElementById('edit-uid').value = uid;
+  document.getElementById('edit-name').value = name;
+  document.getElementById('edit-role').value = role;
+  document.getElementById('edit-plant').value = plant;
+  document.getElementById('edit-status').value = status;
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeEdit() { document.getElementById('edit-modal').classList.remove('open'); }
+
+async function saveEdit() {
+  const uid    = document.getElementById('edit-uid').value;
+  const name   = document.getElementById('edit-name').value.trim();
+  const role   = document.getElementById('edit-role').value;
+  const plant  = document.getElementById('edit-plant').value;
+  const status = document.getElementById('edit-status').value;
+  try {
+    await db.collection('users').doc(uid).update({ name, role, plant, status });
+    closeEdit(); loadUsers();
+    showToast('✅ User updated!');
+  } catch(e) { alert('Error: '+e.message); }
+}
+
+async function sendPasswordReset() {
+  const uid = document.getElementById('edit-uid').value;
+  const user = allUsers.find(u=>u.id===uid);
+  if (!user?.email) return;
+  try {
+    // Firebase generates reset link
+    await auth.sendPasswordResetEmail(user.email, {
+      url: window.location.origin + '/index.html'
+    });
+    // Also try sending via Worker for branded email
+    try {
+      const workerUrl = RESEND_CONFIG?.workerUrl || '';
+      if (workerUrl) {
+        await fetch(workerUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type:       'reset',
+            to_name:    user.name || user.email,
+            to_email:   user.email,
+            reset_link: window.location.origin + '/index.html',
+            company:    APP_CONFIG.companyName,
+          })
+        });
+      }
+    } catch(we) { console.log('Worker email skip:', we); }
+    closeEdit();
+    showToast('🔑 Password reset email sent to '+user.email);
+  } catch(e) { alert('Error: '+e.message); }
+}
+
+async function deleteUser(uid, name) {
+  if (!confirm(`Delete user "${name}"?\n\nThe Firebase Auth account will NOT be deleted (do that in Firebase Console). Only the Firestore user record is removed.`)) return;
+  try {
+    await db.collection('users').doc(uid).delete();
+    loadUsers(); loadStats();
+    showToast('🗑 User removed from Firestore.');
+  } catch(e) { alert('Error: '+e.message); }
+}
+
+// Projects
+async function loadProjects() {
+  try {
+    const snap = await db.collection('workspaces').doc('default').collection('projects').get();
+    projects = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderProjects();
+    // Populate project select in register
+    const sel = document.getElementById('reg-project');
+    sel.innerHTML = '<option value="">— No project —</option>';
+    projects.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id; opt.textContent = p.name;
+      sel.appendChild(opt);
+    });
+  } catch(e) { console.log(e); }
+}
+
+function renderProjects() {
+  const el = document.getElementById('projects-list');
+  if (projects.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:#9ba3c4">No projects yet. Create the first one!</div>';
+    return;
+  }
+  el.innerHTML = projects.map(p=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #dde2f0;border-radius:9px;margin-bottom:8px;background:#f8f9ff">
+      <div style="width:10px;height:10px;border-radius:50%;background:${p.color||'#1a56db'}"></div>
+      <span style="font-weight:500;color:#0d1526;flex:1">${p.name}</span>
+      <span style="font-size:11px;color:#9ba3c4">${p.id}</span>
+      <button class="btn-sm btn-danger" style="border:1px solid #fecaca;background:none;color:#dc2626" onclick="deleteProject('${p.id}','${p.name}')">🗑 Delete</button>
+    </div>`).join('');
+}
+
+async function createProject() {
+  const name  = document.getElementById('proj-name').value.trim();
+  const color = document.getElementById('proj-color').value;
+  const alertEl = document.getElementById('proj-alert');
+  if (!name) { alertEl.innerHTML='<div class="alert alert-err">Enter a project name.</div>'; return; }
+  try {
+    const ref = await db.collection('workspaces').doc('default').collection('projects').add({
+      name, color, members:{}, createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.getElementById('proj-name').value='';
+    alertEl.innerHTML = `<div class="alert alert-ok">✅ Project "${name}" created. ID: ${ref.id}</div>`;
+    loadProjects(); loadStats();
+  } catch(e) { alertEl.innerHTML='<div class="alert alert-err">Error: '+e.message+'</div>'; }
+}
+
+async function deleteProject(id, name) {
+  if (!confirm(`Delete project "${name}"?`)) return;
+  await db.collection('workspaces').doc('default').collection('projects').doc(id).delete();
+  loadProjects(); loadStats();
+  showToast('🗑 Project "'+name+'" deleted.');
+}
+
+// Toast
+let toastT;
+function showToast(msg) {
+  let t = document.getElementById('admin-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id='admin-toast';
+    t.style.cssText='position:fixed;bottom:20px;right:20px;background:#0d1526;color:white;border:1px solid rgba(255,255,255,0.1);border-radius:9px;padding:11px 16px;font-size:13px;font-weight:500;z-index:999;transform:translateY(60px);opacity:0;transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 8px 24px rgba(0,0,0,0.3)';
+    document.body.appendChild(t);
+  }
+  t.textContent=msg; t.style.transform='translateY(0)'; t.style.opacity='1';
+  clearTimeout(toastT); toastT=setTimeout(()=>{t.style.transform='translateY(60px)';t.style.opacity='0';},2800);
+}
+
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeEdit(); });
+</script>
+  <div class="tab-panel" id="tab-settings">
+    <div style="max-width:600px;margin:0 auto;padding:24px">
+      <h2 style="font-size:18px;font-weight:700;color:#0d1526;margin-bottom:20px">⚙️ Company Settings</h2>
+      <div style="background:white;border-radius:12px;border:1px solid #dde2f0;padding:24px;margin-bottom:16px">
+        <h3 style="font-size:14px;font-weight:600;color:#0d1526;margin-bottom:16px">Company Information</h3>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div>
+            <label style="font-size:12px;font-weight:500;color:#4a5578;display:block;margin-bottom:6px">Company Name</label>
+            <input id="cfg-company-name" class="input" placeholder="Menang Nusantara Sdn Bhd" style="width:100%">
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:500;color:#4a5578;display:block;margin-bottom:6px">Admin Email</label>
+            <input id="cfg-admin-email" class="input" placeholder="admin@company.com" type="email" style="width:100%">
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:500;color:#4a5578;display:block;margin-bottom:6px">System Name</label>
+            <input id="cfg-app-name" class="input" placeholder="VELOXA" style="width:100%">
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:500;color:#4a5578;display:block;margin-bottom:6px">Login URL</label>
+            <input id="cfg-login-url" class="input" placeholder="https://veloxa-pm.pages.dev" style="width:100%">
+          </div>
+        </div>
+      </div>
+      <div style="background:white;border-radius:12px;border:1px solid #dde2f0;padding:24px;margin-bottom:16px">
+        <h3 style="font-size:14px;font-weight:600;color:#0d1526;margin-bottom:16px">Plant Locations</h3>
+        <div>
+          <label style="font-size:12px;font-weight:500;color:#4a5578;display:block;margin-bottom:6px">Plants (one per line)</label>
+          <textarea id="cfg-plants" class="input" rows="5" placeholder="HQ&#10;M1&#10;Kulim" style="width:100%;resize:vertical;font-family:inherit"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn-secondary" onclick="loadSettings()">↺ Reset</button>
+        <button class="btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+      </div>
+      <div id="cfg-status" style="margin-top:12px;font-size:13px;text-align:center"></div>
+    </div>
+  </div>
+
+<script>
+// ── SETTINGS FUNCTIONS ─────────────────────────────────────
+// APP_CONFIG already defined in firebase-config.js — NO redeclaration
+
+async function loadSettings() {
+  try {
+    const snap = await db.collection('settings').doc('company').get();
+    const cfg = snap.exists ? snap.data() : APP_CONFIG;
+    document.getElementById('cfg-company-name').value = cfg.companyName || APP_CONFIG.companyName || '';
+    document.getElementById('cfg-admin-email').value  = cfg.adminEmail  || APP_CONFIG.adminEmail  || '';
+    document.getElementById('cfg-app-name').value     = cfg.appName     || APP_CONFIG.appName     || 'VELOXA';
+    document.getElementById('cfg-login-url').value    = cfg.loginUrl    || window.location.origin;
+    document.getElementById('cfg-plants').value       = (cfg.plants || APP_CONFIG.plants || []).join('\n');
+  } catch(e) { console.log('loadSettings error:', e.message); }
+}
+
+async function saveSettings() {
+  const statusEl = document.getElementById('cfg-status');
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = '⏳ Saving...';
+  try {
+    const config = {
+      companyName: document.getElementById('cfg-company-name').value.trim(),
+      adminEmail:  document.getElementById('cfg-admin-email').value.trim(),
+      appName:     document.getElementById('cfg-app-name').value.trim() || 'VELOXA',
+      loginUrl:    document.getElementById('cfg-login-url').value.trim(),
+      plants:      document.getElementById('cfg-plants').value.split('\n').map(p=>p.trim()).filter(Boolean),
+      updatedAt:   firebase.firestore.FieldValue.serverTimestamp()
+    };
+    await db.collection('settings').doc('company').set(config, { merge: true }); // merge: keep other fields (e.g. otFilePassword)
+    // Update local APP_CONFIG
+    Object.assign(APP_CONFIG, config);
+    statusEl.innerHTML = '<span style="color:#059669">✅ Settings saved!</span>';
+    setTimeout(() => statusEl.innerHTML = '', 3000);
+  } catch(e) {
+    statusEl.innerHTML = `<span style="color:#dc2626">❌ Error: ${e.message}</span>`;
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Save Settings';
+  }
+}
+</script>
+</body>
+</html>

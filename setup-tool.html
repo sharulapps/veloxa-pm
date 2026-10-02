@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VELOXA Setup Tool</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:radial-gradient(ellipse at 30% 40%,#0f1e3d 0%,#060d1a 100%);min-height:100vh;color:white;padding:32px 24px}
+.wrap{max-width:820px;margin:0 auto}
+.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.logo-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:22px;letter-spacing:3px;color:#fff}
+h1{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;letter-spacing:1px;margin-bottom:6px}
+.sub{color:rgba(255,255,255,0.4);font-size:14px;margin-bottom:32px;line-height:1.6}
+.card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:28px;margin-bottom:16px}
+.card-title{font-size:16px;font-weight:600;color:rgba(255,255,255,0.9);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.card-sub{font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{margin-bottom:0}
+.label{font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:5px}
+.input{width:100%;padding:10px 14px;border:1px solid rgba(255,255,255,0.1);border-radius:9px;font-size:13px;font-family:'Inter',sans-serif;color:rgba(255,255,255,0.85);outline:none;background:rgba(255,255,255,0.06);transition:all 0.2s}
+.input:focus{border-color:rgba(37,99,235,0.6);background:rgba(255,255,255,0.09);box-shadow:0 0 0 3px rgba(37,99,235,0.12)}
+.input::placeholder{color:rgba(255,255,255,0.18)}
+.hint{font-size:11px;color:rgba(255,255,255,0.25);margin-top:4px}
+.divider{height:1px;background:rgba(255,255,255,0.07);margin:20px 0}
+.instruction{background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);border-radius:10px;padding:14px 16px;margin-bottom:20px}
+.instruction-title{font-size:12px;font-weight:600;color:#60a5fa;margin-bottom:8px}
+.instruction ol,.instruction ul{padding-left:18px;color:rgba(255,255,255,0.55);font-size:12px;line-height:2}
+.instruction a{color:#60a5fa}
+.instruction code{background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#93c5fd}
+/* Big Generate Button */
+.btn-generate{width:100%;padding:16px;background:linear-gradient(135deg,#1a56db,#2563eb);border:none;border-radius:12px;color:white;font-size:16px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;box-shadow:0 6px 20px rgba(26,86,219,0.35);transition:all 0.2s;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:0.3px}
+.btn-generate:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(26,86,219,0.45)}
+.btn-generate:active{transform:translateY(0)}
+.btn-generate:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+/* Progress */
+.progress-wrap{display:none;margin-top:20px}
+.progress-bar-bg{background:rgba(255,255,255,0.08);border-radius:6px;height:8px;overflow:hidden;margin-bottom:10px}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,#1a56db,#60a5fa);border-radius:6px;width:0%;transition:width 0.4s ease}
+.progress-steps{display:flex;flex-direction:column;gap:6px}
+.pstep{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.4);transition:all 0.3s}
+.pstep.active{color:rgba(255,255,255,0.85)}
+.pstep.done{color:#34d399}
+.pstep-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.15);transition:all 0.3s;flex-shrink:0}
+.pstep.active .pstep-dot{background:#60a5fa;box-shadow:0 0 8px rgba(96,165,250,0.5)}
+.pstep.done .pstep-dot{background:#34d399}
+/* Result */
+.result-box{display:none;background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.25);border-radius:12px;padding:22px;margin-top:16px;text-align:center}
+.result-icon{font-size:40px;margin-bottom:10px}
+.result-title{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#34d399;margin-bottom:6px}
+.result-sub{font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px;line-height:1.6}
+.btn-download{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:linear-gradient(135deg,#059669,#10b981);border:none;border-radius:10px;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 14px rgba(5,150,105,0.3);transition:all 0.2s}
+.btn-download:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(5,150,105,0.4)}
+.err-box{background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.25);color:#f87171;border-radius:9px;padding:12px 14px;font-size:12px;margin-top:14px;display:none}
+.optional-tag{font-size:9px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.35);padding:2px 7px;border-radius:4px;font-weight:600;margin-left:6px;vertical-align:middle}
+.step-num-badge{display:inline-flex;width:22px;height:22px;border-radius:50%;background:rgba(37,99,235,0.3);color:#60a5fa;font-size:11px;font-weight:700;align-items:center;justify-content:center;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Logo -->
+  <div class="logo-row">
+    <svg width="36" height="36" viewBox="0 0 100 100" fill="none">
+      <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0f1e3d"/><stop offset="100%" stop-color="#0a1628"/></linearGradient><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1a3a7a"/><stop offset="100%" stop-color="#1a56db"/></linearGradient><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#60a5fa"/></linearGradient></defs>
+      <rect width="100" height="100" rx="22" fill="url(#g1)"/>
+      <path d="M15,15 L36,15 L50,68 L40,68 Z" fill="url(#g2)"/>
+      <path d="M85,15 L64,15 L50,68 L60,68 Z" fill="url(#g3)"/>
+      <path d="M44,15 L56,15 L52,34 L48,34 Z" fill="url(#g1)" opacity="0.9"/>
+    </svg>
+    <span class="logo-name">VELOXA Setup Tool</span>
+  </div>
+
+  <h1>⚙️ Setup VELOXA</h1>
+  <div class="sub">Isi semua maklumat di bawah → klik <strong>"Generate & Download"</strong> → upload terus ke Cloudflare Pages. Done!</div>
+
+  <!-- SECTION 1: Firebase -->
+  <div class="card">
+    <div class="card-title"><span class="step-num-badge">1</span> Firebase Config</div>
+    <div class="card-sub">Dapatkan dari Firebase Console → Project Settings → Your Apps → SDK setup</div>
+
+    <div class="instruction">
+      <div class="instruction-title">📋 Cara dapat Firebase config:</div>
+      <ol>
+        <li>Pergi <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → <strong>Add project</strong> → nama: <code>veloxa-mnsb</code></li>
+        <li>Dalam project → klik ikon <code>&lt;/&gt;</code> (Web) → Register → nama: <code>VELOXA Web</code></li>
+        <li>Copy semua values dari <code>firebaseConfig</code> → paste kat bawah</li>
+        <li>Pergi <strong>Authentication</strong> → Get started → Enable <strong>Email/Password</strong> + <strong>Google</strong></li>
+        <li>Pergi <strong>Firestore Database</strong> → Create database → <strong>Production mode</strong> → region: <code>asia-southeast1</code></li>
+      </ol>
+    </div>
+
+    <div class="grid2">
+      <div class="field"><label class="label">API Key</label><input class="input" id="f-apikey" placeholder="AIzaSy..."><div class="hint">Project Settings → General → Web API Key</div></div>
+      <div class="field"><label class="label">Project ID</label><input class="input" id="f-projectid" placeholder="veloxa-mnsb"><div class="hint">Name project ko dalam Firebase</div></div>
+      <div class="field"><label class="label">Auth Domain</label><input class="input" id="f-authdomain" placeholder="veloxa-mnsb.firebaseapp.com"></div>
+      <div class="field"><label class="label">Storage Bucket</label><input class="input" id="f-bucket" placeholder="veloxa-mnsb.appspot.com"></div>
+      <div class="field"><label class="label">Messaging Sender ID</label><input class="input" id="f-senderid" placeholder="123456789012"></div>
+      <div class="field"><label class="label">App ID</label><input class="input" id="f-appid" placeholder="1:123:web:abc123..."></div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Resend + Cloudflare Worker -->
+  <div class="card">
+    <div class="card-title"><span class="step-num-badge">2</span> Resend Email Config <span class="optional-tag">OPTIONAL</span></div>
+    <div class="card-sub">Untuk welcome email & reset password via Resend + Cloudflare Worker. Boleh skip dulu, setup kemudian.</div>
+
+    <div class="instruction">
+      <div class="instruction-title">📋 Cara setup Resend + Cloudflare Worker:</div>
+      <ol>
+        <li>Daftar di <a href="https://resend.com" target="_blank">resend.com</a> → Dashboard → <strong>API Keys</strong> → Create API Key → copy <code>re_xxxx</code></li>
+        <li>Verify domain ko kat Resend (or guna <code>onboarding@resend.dev</code> untuk test)</li>
+        <li>Pergi <a href="https://dash.cloudflare.com" target="_blank">dash.cloudflare.com</a> → <strong>Workers & Pages</strong> → <strong>Create Worker</strong></li>
+        <li>Namekan worker: <code>veloxa-email-worker</code> → Deploy</li>
+        <li>Edit worker → <strong>paste semua code dari <code>worker.js</code></strong> dalam ZIP → Save & Deploy</li>
+        <li>Worker Settings → <strong>Variables</strong> → Add:<br>
+          <code>RESEND_API_KEY</code> = <code>re_xxxxxxxxxxxx</code> (set as Secret)<br>
+          <code>FROM_DOMAIN</code> = domain email ko (contoh: <code>mnsb.com</code>)</li>
+        <li>Copy URL worker: <code>https://veloxa-email-worker.yourname.workers.dev</code> → paste kat bawah</li>
+        <li>Worker Settings → <strong>HTTP → CORS</strong> → tambah domain Cloudflare Pages ko dalam <code>ALLOWED_ORIGINS</code> dalam worker.js</li>
+      </ol>
+    </div>
+
+    <div class="field" style="margin-bottom:12px">
+      <label class="label">Cloudflare Worker URL</label>
+      <input class="input" id="r-worker" placeholder="https://veloxa-email-worker.yourname.workers.dev">
+      <div class="hint">URL worker yang ko deploy kat Cloudflare Workers</div>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label class="label">From Domain</label>
+        <input class="input" id="r-domain" placeholder="mnsb.com">
+        <div class="hint">Domain untuk from address (kena verify kat Resend)</div>
+      </div>
+      <div class="field">
+        <label class="label">Admin Email (untuk support)</label>
+        <input class="input" id="r-adminemail" placeholder="admin@mnsb.com">
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: App Config -->
+  <div class="card">
+    <div class="card-title"><span class="step-num-badge">3</span> App Config</div>
+    <div class="card-sub">Maklumat syarikat dan admin pertama</div>
+    <div class="grid2">
+      <div class="field"><label class="label">Company Name</label><input class="input" id="a-company" placeholder="MNSB" value="MNSB"></div>
+      <div class="field"><label class="label">Admin Email</label><input class="input" id="a-email" placeholder="admin@mnsb.com"></div>
+    </div>
+    <div style="margin-top:12px">
+      <div class="instruction" style="border-color:rgba(217,119,6,0.3);background:rgba(217,119,6,0.06)">
+        <div class="instruction-title" style="color:#fbbf24">⚠️ Selepas download & upload ke Cloudflare:</div>
+        <ol>
+          <li>Firebase Console → <strong>Authentication</strong> → Users → <strong>Add user</strong> → masuk email & password admin</li>
+          <li>Copy <strong>User UID</strong> yang dijana</li>
+          <li>Firestore → <strong>Start collection</strong> → ID: <code>users</code> → Document ID: <strong>(UID tadi)</strong></li>
+          <li>Add fields: <code>name</code>: nama ko, <code>email</code>: email ko, <code>role</code>: <strong>admin</strong>, <code>workspaceId</code>: <strong>default</strong>, <code>status</code>: <strong>active</strong></li>
+          <li>Buat collection <code>workspaces</code> → Doc ID: <code>default</code> → field <code>name</code>: <strong>MNSB</strong></li>
+          <li>Firebase → Authentication → Settings → <strong>Authorized domains</strong> → tambah domain Cloudflare ko</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- GENERATE BUTTON -->
+  <button class="btn-generate" id="gen-btn" onclick="generate()">
+    <span>⚡</span> Generate & Download All Files
+  </button>
+
+  <!-- ERROR -->
+  <div class="err-box" id="err-box"></div>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap" id="progress-wrap">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="prog-fill"></div></div>
+    <div class="progress-steps">
+      <div class="pstep" id="ps1"><div class="pstep-dot"></div>Validating config...</div>
+      <div class="pstep" id="ps2"><div class="pstep-dot"></div>Generating firebase-config.js...</div>
+      <div class="pstep" id="ps3"><div class="pstep-dot"></div>Patching index.html...</div>
+      <div class="pstep" id="ps4"><div class="pstep-dot"></div>Patching app.html...</div>
+      <div class="pstep" id="ps5"><div class="pstep-dot"></div>Patching admin.html...</div>
+      <div class="pstep" id="ps6"><div class="pstep-dot"></div>Patching exec.html...</div>
+      <div class="pstep" id="ps7"><div class="pstep-dot"></div>Creating ZIP package...</div>
+      <div class="pstep" id="ps8"><div class="pstep-dot"></div>Done!</div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-box" id="result-box">
+    <div class="result-icon">🎉</div>
+    <div class="result-title">All files sedia!</div>
+    <div class="result-sub">ZIP dah mengandungi semua 6 files dengan Firebase config dah di-patch masuk.<br>Upload semua ke Cloudflare Pages — selesai!</div>
+    <button class="btn-download" id="dl-btn">⬇ Download veloxa-deploy.zip</button>
+    <div style="margin-top:16px;font-size:12px;color:rgba(255,255,255,0.3)">
+      Files dalam ZIP: <code style="color:rgba(255,255,255,0.5)">firebase-config.js · index.html · app.html · admin.html · exec.html · setup-tool.html</code>
+    </div>
+  </div>
+
+</div>
+
+<!-- JSZip for creating zip in browser -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+// ══════════════════════════════
+// FILE TEMPLATES
+// ══════════════════════════════
+
+// firebase-config.js template
+function makeConfig(fc, rc, ac) {
+  return `// ============================================================
+// VELOXA — Firebase Configuration
+// Generated by VELOXA Setup Tool · ${new Date().toLocaleString('ms-MY')}
+// ============================================================
+
+const FIREBASE_CONFIG = {
+  apiKey:            "${fc.apiKey}",
+  authDomain:        "${fc.authDomain}",
+  projectId:         "${fc.projectId}",
+  storageBucket:     "${fc.storageBucket}",
+  messagingSenderId: "${fc.messagingSenderId}",
+  appId:             "${fc.appId}"
+};
+
+// Resend via Cloudflare Worker
+const RESEND_CONFIG = {
+  workerUrl:  "${rc.workerUrl || 'YOUR_CLOUDFLARE_WORKER_URL'}"
+};
+
+// App config
+const APP_CONFIG = {
+  appName:     "VELOXA",
+  companyName: "${ac.company || 'MNSB'}",
+  adminEmail:  "${ac.email || 'admin@company.com'}",
+  version:     "1.0.0"
+};`;
+}
+
+// ══════════════════════════════
+// FETCH FILES
+// ══════════════════════════════
+async function fetchFile(name) {
+  const res = await fetch(name);
+  if (!res.ok) throw new Error(`Failed load ${name}: ${res.status}`);
+  return await res.text();
+}
+
+// ══════════════════════════════
+// FIRESTORE RULES
+// ══════════════════════════════
+const FIRESTORE_RULES = `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuth() { return request.auth != null; }
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    function isAdmin()   { return getRole() in ['admin','superadmin']; }
+    function isExec()    { return getRole() in ['ceo','director','gm']; }
+    function isManager() { return getRole() in ['manager','admin','superadmin']; }
+
+    match /users/{uid} {
+      allow read:  if isAuth() && (request.auth.uid == uid || isAdmin());
+      allow write: if isAuth() && isAdmin();
+    }
+    match /workspaces/{wsId} {
+      allow read: if isAuth();
+      match /projects/{projId} {
+        allow read: if isAuth() && (isAdmin() || isExec() || request.auth.uid in resource.data.members);
+        allow write: if isAuth() && isAdmin();
+        match /tasks/{taskId} {
+          allow read: if isAuth() && (isAdmin() || isExec() || isManager() || request.auth.uid in get(/databases/$(database)/documents/workspaces/$(wsId)/projects/$(projId)).data.members);
+          allow create: if isAuth() && isManager();
+          allow update: if isAuth() && (isManager() || request.auth.uid in resource.data.assignees);
+          allow delete: if isAuth() && isManager();
+          match /subtasks/{subId} { allow read, write: if isAuth(); }
+          match /comments/{comId} { allow read, write: if isAuth(); }
+        }
+        match /meetings/{meetId} {
+          allow read: if isAuth() && (isAdmin() || isExec() || isManager() || request.auth.uid in get(/databases/$(database)/documents/workspaces/$(wsId)/projects/$(projId)).data.members);
+          allow write: if isAuth() && isManager();
+        }
+        match /activity/{actId} { allow read, write: if isAuth(); }
+      }
+    }
+  }
+}`;
+
+// ══════════════════════════════
+// MAIN GENERATE FUNCTION
+// ══════════════════════════════
+async function generate() {
+  // Clear errors
+  const errEl = document.getElementById('err-box');
+  errEl.style.display = 'none';
+
+  // Gather config
+  const fc = {
+    apiKey:            document.getElementById('f-apikey').value.trim(),
+    projectId:         document.getElementById('f-projectid').value.trim(),
+    authDomain:        document.getElementById('f-authdomain').value.trim(),
+    storageBucket:     document.getElementById('f-bucket').value.trim(),
+    messagingSenderId: document.getElementById('f-senderid').value.trim(),
+    appId:             document.getElementById('f-appid').value.trim(),
+  };
+  const rc = {
+    workerUrl:  document.getElementById('r-worker').value.trim(),
+    fromDomain: document.getElementById('r-domain').value.trim(),
+    adminEmail: document.getElementById('r-adminemail').value.trim(),
+  };
+  const ac = {
+    company: document.getElementById('a-company').value.trim(),
+    email:   document.getElementById('a-email').value.trim(),
+  };
+
+  // Validate Firebase (required)
+  const missing = Object.entries(fc).filter(([k,v])=>!v).map(([k])=>k);
+  if (missing.length > 0) {
+    errEl.textContent = '⚠️ Sila isi semua Firebase config fields: ' + missing.join(', ');
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // Auto-fill authDomain & storageBucket if empty (common pattern)
+  if (!fc.authDomain && fc.projectId) fc.authDomain = fc.projectId + '.firebaseapp.com';
+  if (!fc.storageBucket && fc.projectId) fc.storageBucket = fc.projectId + '.appspot.com';
+
+  // Show progress
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  document.getElementById('progress-wrap').style.display = 'block';
+  document.getElementById('result-box').style.display = 'none';
+
+  const steps = [
+    {id:'ps1', label:'Validating config...'},
+    {id:'ps2', label:'Generating firebase-config.js...'},
+    {id:'ps3', label:'Patching index.html...'},
+    {id:'ps4', label:'Patching app.html...'},
+    {id:'ps5', label:'Patching admin.html...'},
+    {id:'ps6', label:'Patching exec.html...'},
+    {id:'ps7', label:'Creating ZIP package...'},
+    {id:'ps8', label:'Done! ✅'},
+  ];
+
+  function setStep(n) {
+    steps.forEach((s,i)=>{
+      const el = document.getElementById(s.id);
+      if (i < n) { el.className='pstep done'; el.querySelector('.pstep-dot').style.background='#34d399'; }
+      else if (i === n) { el.className='pstep active'; }
+      else { el.className='pstep'; el.querySelector('.pstep-dot').style.background='rgba(255,255,255,0.15)'; }
+    });
+    document.getElementById('prog-fill').style.width = Math.round((n/steps.length)*100)+'%';
+  }
+
+  try {
+    await sleep(300); setStep(0);
+
+    // Step 1: Validate ✓
+    await sleep(400); setStep(1);
+
+    // Step 2: Generate config file
+    const configJs = makeConfig(fc, rc, ac);
+    await sleep(300); setStep(2);
+
+    // Step 3-6: Fetch source files
+    let indexHtml, appHtml, adminHtml, execHtml, setupHtml;
+    try {
+      indexHtml = await fetchFile('index.html');
+    } catch(e) { indexHtml = getIndexTemplate(fc, rc, ac); }
+    setStep(3); await sleep(200);
+
+    try {
+      appHtml = await fetchFile('app.html');
+    } catch(e) { appHtml = '<!-- app.html not found - upload from zip -->'; }
+    setStep(4); await sleep(200);
+
+    try {
+      adminHtml = await fetchFile('admin.html');
+    } catch(e) { adminHtml = '<!-- admin.html not found - upload from zip -->'; }
+    setStep(5); await sleep(200);
+
+    try {
+      execHtml = await fetchFile('exec.html');
+    } catch(e) { execHtml = '<!-- exec.html not found - upload from zip -->'; }
+    setStep(6); await sleep(200);
+
+    try {
+      setupHtml = await fetchFile('setup-tool.html');
+    } catch(e) { setupHtml = document.documentElement.outerHTML; }
+
+    // Step 7: Create ZIP
+    setStep(6);
+    const zip = new JSZip();
+    // Fetch worker.js
+    let workerJs = '';
+    try { workerJs = await fetchFile('worker.js'); } catch(e) { workerJs = '// Upload worker.js dari package veloxa-worker'; }
+
+    zip.file('firebase-config.js', configJs);
+    zip.file('FIRESTORE_RULES.txt', FIRESTORE_RULES);
+    zip.file('index.html', indexHtml);
+    zip.file('app.html', appHtml);
+    zip.file('admin.html', adminHtml);
+    zip.file('exec.html', execHtml);
+    zip.file('setup-tool.html', setupHtml);
+    zip.file('worker.js', workerJs);
+    zip.file('README.txt', makeReadme(fc, rc, ac));
+
+    const blob = await zip.generateAsync({type:'blob', compression:'DEFLATE', compressionOptions:{level:6}});
+    setStep(7); await sleep(300);
+
+    // Store blob for download
+    window._zipBlob = blob;
+    window._zipUrl  = URL.createObjectURL(blob);
+
+    document.getElementById('dl-btn').onclick = () => {
+      const a = document.createElement('a');
+      a.href = window._zipUrl;
+      a.download = 'veloxa-deploy.zip';
+      a.click();
+    };
+
+    // Show result
+    document.getElementById('prog-fill').style.width = '100%';
+    document.getElementById('result-box').style.display = 'block';
+    document.getElementById('result-box').scrollIntoView({behavior:'smooth', block:'center'});
+    btn.disabled = false;
+
+  } catch(err) {
+    errEl.textContent = '❌ Error: ' + err.message;
+    errEl.style.display = 'block';
+    btn.disabled = false;
+  }
+}
+
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+function makeReadme(fc, rc, ac) {
+  return `VELOXA Deploy Package
+Generated: ${new Date().toLocaleString('ms-MY')}
+Company: ${ac.company || 'MNSB'}
+Firebase Project: ${fc.projectId}
+
+FILES:
+- firebase-config.js   : Firebase + Resend Worker config (PATCHED)
+- worker.js            : Cloudflare Worker untuk email (deploy berasingan)
+- index.html           : Login page
+- app.html             : Main app (Table/Kanban/Dashboard/Timeline/MOM)
+- admin.html           : Admin panel (register users, manage roles)
+- exec.html            : CEO/Director executive dashboard
+- setup-tool.html      : This setup tool
+- FIRESTORE_RULES.txt  : Copy & paste into Firebase Console > Firestore > Rules
+
+DEPLOY STEPS:
+1. Upload semua files ke Cloudflare Pages
+2. Firebase > Authentication > Settings > Authorized domains > tambah domain Cloudflare
+3. Firebase > Firestore > Rules > copy FIRESTORE_RULES.txt > Publish
+4. Firebase > Authentication > Users > Add user (admin pertama)
+5. Firestore > users collection > tambah doc dengan UID admin
+   Fields: name, email, role: admin, workspaceId: default, status: active
+6. Firestore > workspaces collection > doc ID: default > name: ${ac.company || 'MNSB'}
+7. Login ke /index.html > masuk ke app!
+
+ROLES:
+- admin/superadmin : Full access + Admin Panel
+- manager          : Project tasks, create/edit tasks, MOM
+- engineer         : Project tasks, view/update assigned tasks
+- technician       : Own tasks only
+- ceo/director/gm  : Executive Dashboard only (auto-redirect)
+`;
+}
+
+// Fallback minimal index.html if fetch fails
+function getIndexTemplate(fc, rc, ac) {
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>VELOXA</title>
+<script src="firebase-config.js"><\/script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"><\/script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"><\/script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"><\/script>
+</head><body>
+<p>Please upload all files from the ZIP package to Cloudflare Pages.</p>
+<\/body><\/html>`;
+}
+</script>
+</body>
+</html>

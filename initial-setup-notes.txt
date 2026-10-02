@@ -1,0 +1,36 @@
+VELOXA Deploy Package - MNSB
+Firebase Project: veloxa-pm
+Generated: 2026-06-21
+
+NEXT STEPS AFTER UPLOAD TO CLOUDFLARE PAGES:
+=============================================
+
+1. Firebase Console > Authentication > Users > Add user
+   - Email: menangnusantara7@gmail.com
+   - Password: (set password)
+   - Copy the USER UID generated
+
+2. Firestore Database > Start collection
+   - Collection ID: users
+   - Document ID: (paste UID from step 1)
+   - Fields:
+     name: "Sharul"
+     email: "menangnusantara7@gmail.com"
+     role: "admin"
+     workspaceId: "default"
+     status: "active"
+
+3. Firestore > New collection
+   - Collection ID: workspaces
+   - Document ID: default
+   - Fields:
+     name: "MNSB"
+
+4. Firebase > Authentication > Settings > Authorized domains
+   - Add: veloxa-pm.pages.dev
+
+5. Firestore > Rules tab
+   - Copy paste content from FIRESTORE_RULES.txt
+   - Click Publish
+
+6. Open https://veloxa-pm.pages.dev > Login!

@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VELOXA — Executive Dashboard</title>
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#0a0f1e;color:white;min-height:100vh}
+/* Topbar */
+.topbar{height:56px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;padding:0 28px;gap:14px;position:sticky;top:0;z-index:50;backdrop-filter:blur(10px)}
+.logo-wrap{display:flex;align-items:center;gap:10px}
+.logo-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;letter-spacing:2.5px;color:#fff}
+.exec-badge{font-size:9px;background:rgba(99,102,241,0.2);color:#818cf8;padding:2px 8px;border-radius:4px;font-weight:700;letter-spacing:0.5px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.user-pill{display:flex;align-items:center;gap:8px;padding:5px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:20px}
+.av-sm{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#1a56db,#2563eb);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:white}
+.user-name-text{font-size:12px;color:rgba(255,255,255,0.6)}
+.user-role-text{font-size:10px;color:rgba(255,255,255,0.3)}
+.btn-logout{padding:5px 12px;background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:7px;color:rgba(255,255,255,0.3);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
+.btn-logout:hover{background:rgba(220,38,38,0.1);color:#f87171;border-color:rgba(220,38,38,0.2)}
+/* Refresh btn */
+.btn-refresh{padding:6px 12px;background:rgba(37,99,235,0.15);border:1px solid rgba(37,99,235,0.25);border-radius:7px;color:#60a5fa;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px}
+.btn-refresh:hover{background:rgba(37,99,235,0.25)}
+/* Page */
+.page{padding:28px}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px}
+.page-title{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.9)}
+.page-sub{font-size:13px;color:rgba(255,255,255,0.3);margin-top:3px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;margin-right:5px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+/* KPI row */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.kpi-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:18px;position:relative;overflow:hidden}
+.kpi-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:10px}
+.kpi-num{font-family:'Rajdhani',sans-serif;font-size:34px;font-weight:700;color:white;line-height:1}
+.kpi-label{font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px}
+.kpi-trend{font-size:11px;margin-top:8px;font-weight:600}
+.kpi-trend.up{color:#22c55e}
+.kpi-trend.down{color:#f87171}
+.kpi-trend.warn{color:#fbbf24}
+/* Grid row */
+.grid-row{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-bottom:14px}
+.grid-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+/* Widget */
+.widget{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:18px}
+.widget-title{font-size:11px;font-weight:700;letter-spacing:0.7px;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:14px}
+/* Project bar */
+.proj-bar-item{margin-bottom:12px}
+.proj-bar-top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.proj-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.proj-name{font-size:13px;color:rgba(255,255,255,0.75);font-weight:500;flex:1}
+.proj-pct{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700}
+.proj-pill{font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px}
+.prog-track{height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width 0.8s ease}
+.proj-meta{font-size:10px;color:rgba(255,255,255,0.25);margin-top:3px}
+/* Risk list */
+.risk-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.risk-item:last-child{border-bottom:none}
+.risk-badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;white-space:nowrap;letter-spacing:0.3px}
+.risk-name{font-size:12px;color:rgba(255,255,255,0.7);flex:1;font-weight:500}
+.risk-meta{font-size:10px;color:rgba(255,255,255,0.25)}
+/* Workload */
+.wl-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.wl-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0}
+.wl-info{flex:1}
+.wl-name{font-size:12px;color:rgba(255,255,255,0.7);font-weight:500}
+.wl-tasks{font-size:10px;color:rgba(255,255,255,0.25);margin-top:2px}
+.wl-pct{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,0.5);min-width:36px;text-align:right}
+/* KPI target */
+.kpi-row-item{margin-bottom:12px}
+.kpi-row-top{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+.kpi-actual{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700}
+.kpi-vs{font-size:11px;color:rgba(255,255,255,0.25)}
+.kpi-target{font-size:12px;color:rgba(255,255,255,0.35)}
+.kpi-name{font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px}
+.kpi-gap{font-size:10px;margin-top:3px;font-weight:600}
+/* Budget */
+.budget-item{margin-bottom:10px}
+.budget-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.budget-name{font-size:12px;color:rgba(255,255,255,0.6)}
+.budget-val{font-size:12px;font-weight:700}
+/* Amendment log */
+.amd-item{border-left:2px solid rgba(99,102,241,0.5);padding:6px 10px;margin-bottom:8px;background:rgba(255,255,255,0.03);border-radius:0 6px 6px 0}
+.amd-header{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.amd-av{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:white;flex-shrink:0}
+.amd-user{font-size:11px;font-weight:600;color:rgba(255,255,255,0.8)}
+.amd-time{font-size:9px;color:rgba(255,255,255,0.25);margin-left:auto}
+.amd-change{font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.amd-field{font-weight:600;color:rgba(255,255,255,0.35)}
+.amd-from{text-decoration:line-through;color:#f87171}
+.amd-to{color:#34d399;font-weight:600}
+/* Loading */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:12px}
+.spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,0.1);border-top-color:#1a56db;border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:rgba(255,255,255,0.3)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-wrap">
+    <svg width="28" height="28" viewBox="0 0 100 100" fill="none">
+      <defs>
+        <linearGradient id="ebg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0f1e3d"/><stop offset="100%" stop-color="#0a1628"/></linearGradient>
+        <linearGradient id="el" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1a3a7a"/><stop offset="100%" stop-color="#1a56db"/></linearGradient>
+        <linearGradient id="er" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#60a5fa"/></linearGradient>
+      </defs>
+      <rect width="100" height="100" rx="22" fill="url(#ebg)"/>
+      <path d="M15,15 L36,15 L50,68 L40,68 Z" fill="url(#el)"/>
+      <path d="M85,15 L64,15 L50,68 L60,68 Z" fill="url(#er)"/>
+      <path d="M44,15 L56,15 L52,34 L48,34 Z" fill="url(#ebg)" opacity="0.9"/>
+    </svg>
+    <span class="logo-name">VELOXA</span>
+    
+  </div>
+  <div class="topbar-right">
+    <button class="btn-refresh" onclick="loadExecData()">↻ Refresh</button>
+    <div class="user-pill">
+      <div class="av-sm" id="exec-av">?</div>
+      <div>
+        <div class="user-name-text" id="exec-name">—</div>
+        <div class="user-role-text" id="exec-role">—</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">⏻ Sign Out</button>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading" id="loading-state">
+  <div class="spinner"></div>
+  <div class="loading-text">Loading executive data...</div>
+</div>
+
+<!-- Dashboard content -->
+<div class="page" id="exec-content" style="display:none">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Executive Overview</div>
+      <div class="page-sub"><span class="live-dot"></span>Live data · <span id="last-updated">—</span></div>
+    </div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.25)" id="workspace-name">MNSB Workspace</div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-row" id="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:rgba(26,86,219,0.15)">📁</div>
+      <div class="kpi-num" id="kpi-projects">—</div>
+      <div class="kpi-label">Active Projects</div>
+      <div class="kpi-trend up" id="kpi-projects-trend">—</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:rgba(5,150,105,0.15)">✅</div>
+      <div class="kpi-num" id="kpi-tasks-done">—</div>
+      <div class="kpi-label">Tasks Done</div>
+      <div class="kpi-trend up" id="kpi-done-trend">—</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:rgba(220,38,38,0.15)">⚠️</div>
+      <div class="kpi-num" id="kpi-overdue">—</div>
+      <div class="kpi-label">Overdue / At Risk</div>
+      <div class="kpi-trend down" id="kpi-overdue-trend">Needs attention</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:rgba(124,58,237,0.15)">👥</div>
+      <div class="kpi-num" id="kpi-users">—</div>
+      <div class="kpi-label">Active Users</div>
+      <div class="kpi-trend up" id="kpi-users-trend">—</div>
+    </div>
+  </div>
+
+  <!-- Row 2 -->
+  <div class="grid-row">
+    <!-- Projects progress -->
+    <div class="widget">
+      <div class="widget-title">📊 All Projects Progress</div>
+      <div id="projects-progress">
+        <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.2)">Loading projects...</div>
+      </div>
+    </div>
+    <!-- At Risk -->
+    <div class="widget">
+      <div class="widget-title">🚨 Overdue & At Risk</div>
+      <div id="risk-list">
+        <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.2)">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3 -->
+  <div class="grid-row-3">
+    <!-- Team Workload -->
+    <div class="widget">
+      <div class="widget-title">👥 Team Workload</div>
+      <div id="workload-list">
+        <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.2)">Loading...</div>
+      </div>
+    </div>
+    <!-- KPI Target -->
+    <div class="widget">
+      <div class="widget-title">🎯 KPI vs Target</div>
+      <div id="kpi-targets">
+        <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.2)">Loading...</div>
+      </div>
+    </div>
+    <!-- Budget -->
+    <div class="widget">
+      <div class="widget-title">💰 Budget Overview (RM)</div>
+      <div id="budget-overview">
+        <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.2)">Loading...</div>
+      </div>
+    </div>
+    <!-- OT Hours -->
+    <div class="widget">
+      <div class="widget-title">⏱ Overtime Hours</div>
+      <div id="ot-overview">
+        <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.2)">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 4: Amendment Log -->
+  <div class="grid-row" style="margin-top:16px">
+    <div class="widget" style="grid-column:1/-1">
+      <div class="widget-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>📝 Task Amendment Log</span>
+        <select id="amd-proj-filter" onchange="filterAmendments()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer">
+          <option value="">All Projects</option>
+        </select>
+      </div>
+      <div id="amendment-log">
+        <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.2)">Loading...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+const EXEC_ROLES  = ['ceo','director','gm'];
+const ADMIN_ROLES = ['admin','superadmin'];
+
+// APP_CONFIG defined in firebase-config.js
+if (typeof APP_CONFIG === 'undefined') {
+  window.APP_CONFIG = { companyName: 'Menang Nusantara Sdn Bhd', adminEmail: '', appName: 'VELOXA', plants: ['HQ','M1','Kulim'] };
+} else {
+  APP_CONFIG.plants = APP_CONFIG.plants || ['HQ','M1','Kulim'];
+}
+
+async function loadAppConfig() {
+  try {
+    const doc = await db.collection('settings').doc('company').get();
+    if (doc.exists) Object.assign(APP_CONFIG, doc.data());
+    const wsEl = document.getElementById('workspace-name');
+    if (wsEl) wsEl.textContent = APP_CONFIG.companyName + ' Workspace';
+  } catch(e) { console.log('Config:', e); }
+}
+
+auth.onAuthStateChanged(async user => {
+  if (!user) { window.location.href = 'index.html'; return; }
+  await loadAppConfig();
+  try {
+    const doc = await db.collection('users').doc(user.uid).get();
+    if (!doc.exists) { auth.signOut(); return; }
+    const data = doc.data();
+    const role = data.role;
+    // Allow exec AND admin to see this page
+    if (!EXEC_ROLES.includes(role) && !ADMIN_ROLES.includes(role) && role !== 'manager') {
+      window.location.href = 'app.html'; return;
+    }
+    const initials = (data.name||user.email||'?').split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2);
+    document.getElementById('exec-av').textContent   = initials;
+    document.getElementById('exec-name').textContent = data.name || user.email;
+    const roleDisplay = {ceo:'CEO',director:'DIRECTOR',gm:'GM',admin:'ADMIN',superadmin:'ADMIN',manager:'MANAGER'};
+    document.getElementById('exec-role').textContent = roleDisplay[role]||role.toUpperCase();
+    await loadExecData();
+  } catch(e) { console.error(e); }
+});
+
+function doLogout() { auth.signOut().then(()=>window.location.href='index.html'); }
+
+async function loadExecData() {
+  document.getElementById('loading-state').style.display = 'flex';
+  document.getElementById('exec-content').style.display  = 'none';
+  try {
+    // Pull ALL projects from workspace
+    const projSnap = await db.collection('workspaces').doc('default').collection('projects').get();
+    const projects = projSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+    // Pull all tasks across all projects
+    let allTasks = [], overdueCount = 0;
+    const today = new Date();
+    const taskPromises = projects.map(p =>
+      db.collection('workspaces').doc('default').collection('projects').doc(p.id).collection('tasks').get()
+    );
+    const taskSnaps = await Promise.all(taskPromises);
+    taskSnaps.forEach((snap,pi) => {
+      snap.docs.forEach(d => {
+        const t = {id:d.id, projectId:projects[pi].id, projectName:projects[pi].name, projectColor:projects[pi].color, ...d.data()};
+        allTasks.push(t);
+        if (t.dueDate && new Date(t.dueDate) < today && t.status !== 'done') overdueCount++;
+      });
+    });
+
+    // Pull all users
+    const usersSnap = await db.collection('users').get();
+    const users = usersSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const activeUsers = users.filter(u=>u.status!=='inactive');
+
+    // Stats
+    const doneTasks = allTasks.filter(t=>t.status==='done').length;
+    document.getElementById('kpi-projects').textContent     = projects.length;
+    document.getElementById('kpi-tasks-done').textContent   = doneTasks;
+    document.getElementById('kpi-overdue').textContent      = overdueCount;
+    document.getElementById('kpi-users').textContent        = activeUsers.length;
+    document.getElementById('kpi-projects-trend').textContent = '↑ ' + projects.length + ' active projects';
+    document.getElementById('kpi-done-trend').textContent   = Math.round((doneTasks/Math.max(allTasks.length,1))*100) + '% completion rate';
+    document.getElementById('kpi-users-trend').textContent  = '↑ ' + activeUsers.length + ' active users';
+    document.getElementById('last-updated').textContent     = new Date().toLocaleTimeString('en-MY');
+
+    // Projects progress
+    const projEl = document.getElementById('projects-progress');
+    if (projects.length === 0) {
+      projEl.innerHTML = '<div style="color:rgba(255,255,255,0.2);font-size:12px;text-align:center;padding:20px">No projects yet</div>';
+    } else {
+      projEl.innerHTML = projects.map(p => {
+        const pTasks = allTasks.filter(t=>t.projectId===p.id);
+        const pDone  = pTasks.filter(t=>t.status==='done').length;
+        const pOverdue = pTasks.filter(t=>t.dueDate && new Date(t.dueDate)<today && t.status!=='done').length;
+        const pct    = pTasks.length ? Math.round((pDone/pTasks.length)*100) : 0;
+        const atRisk = pOverdue > 0;
+        const pillStyle = atRisk ? 'background:rgba(220,38,38,0.15);color:#f87171' : 'background:rgba(34,197,94,0.15);color:#4ade80';
+        const pillText  = atRisk ? 'At Risk' : 'On Track';
+        return `<div class="proj-bar-item">
+          <div class="proj-bar-top">
+            <div class="proj-dot" style="background:${p.color||'#1a56db'}"></div>
+            <span class="proj-name">${p.name}</span>
+            <span class="proj-pct" style="color:${p.color||'#60a5fa'}">${pct}%</span>
+            <span class="proj-pill" style="${pillStyle}">${pillText}</span>
+          </div>
+          <div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${p.color||'#1a56db'}"></div></div>
+          <div class="proj-meta">${pTasks.length} tasks · ${pOverdue} overdue</div>
+        </div>`;
+      }).join('');
+    }
+
+    // Risk list
+    const riskTasks = allTasks
+      .filter(t => (t.dueDate && new Date(t.dueDate) < today && t.status !== 'done') || t.status === 'stuck')
+      .slice(0, 6);
+    const riskEl = document.getElementById('risk-list');
+    if (riskTasks.length === 0) {
+      riskEl.innerHTML = '<div style="color:#4ade80;font-size:12px;text-align:center;padding:16px">✅ No overdue tasks!</div>';
+    } else {
+      riskEl.innerHTML = riskTasks.map(t => {
+        const isOverdue = t.dueDate && new Date(t.dueDate) < today;
+        const badgeStyle = isOverdue ? 'background:rgba(220,38,38,0.15);color:#f87171' : 'background:rgba(217,119,6,0.15);color:#fbbf24';
+        const badgeText  = isOverdue ? 'OVERDUE' : 'STUCK';
+        return `<div class="risk-item">
+          <span class="risk-badge" style="${badgeStyle}">${badgeText}</span>
+          <div>
+            <div class="risk-name">${t.title||'Untitled'}</div>
+            <div class="risk-meta">${t.projectName||'—'}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // Workload by user
+    const wlEl = document.getElementById('workload-list');
+    const COLORS = ['#ea580c','#dc2626','#4f46e5','#7c3aed','#059669','#06b6d4','#d97706'];
+    const userTaskMap = {};
+    allTasks.forEach(t => {
+      (t.assignees||[]).forEach(uid => {
+        if (!userTaskMap[uid]) userTaskMap[uid] = {total:0,overdue:0};
+        userTaskMap[uid].total++;
+        if (t.dueDate && new Date(t.dueDate) < today && t.status !== 'done') userTaskMap[uid].overdue++;
+      });
+    });
+    const wlUsers = activeUsers.filter(u=>userTaskMap[u.id]).sort((a,b)=>(userTaskMap[b.id]?.total||0)-(userTaskMap[a.id]?.total||0)).slice(0,5);
+    if (wlUsers.length === 0) {
+      wlEl.innerHTML = '<div style="color:rgba(255,255,255,0.2);font-size:12px;text-align:center;padding:16px">No workload data</div>';
+    } else {
+      const maxTasks = Math.max(...wlUsers.map(u=>userTaskMap[u.id]?.total||0), 1);
+      wlEl.innerHTML = wlUsers.map((u,i) => {
+        const td = userTaskMap[u.id]||{};
+        const pct = Math.round((td.total/maxTasks)*100);
+        const initials = (u.name||u.email||'?').split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2);
+        const color = COLORS[i%COLORS.length];
+        const pctColor = pct>80?'#f87171':pct>60?'#fbbf24':'rgba(255,255,255,0.4)';
+        return `<div class="wl-row">
+          <div class="wl-av" style="background:${color}">${initials}</div>
+          <div class="wl-info">
+            <div class="wl-name">${u.name||u.email}</div>
+            <div class="prog-track" style="margin:4px 0"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div>
+            <div class="wl-tasks">${td.total} tasks · ${td.overdue>0?'<span style="color:#f87171">'+td.overdue+' overdue</span>':'0 overdue'}</div>
+          </div>
+          <div class="wl-pct" style="color:${pctColor}">${pct}%</div>
+        </div>`;
+      }).join('');
+    }
+
+    // KPI Targets (computed from real data)
+    const totalT   = allTasks.length || 1;
+    const compRate = Math.round((doneTasks/totalT)*100);
+    const onTimeT  = allTasks.filter(t=>t.status==='done' && !(t.dueDate && new Date(t.dueDate) < (t.completedAt?.toDate?.()||today))).length;
+    const onTimeRate = Math.round((onTimeT/totalT)*100);
+    document.getElementById('kpi-targets').innerHTML = [
+      {label:'Task Completion Rate', actual:compRate, target:80, unit:'%'},
+      {label:'On-Time Delivery',     actual:onTimeRate, target:90, unit:'%'},
+      {label:'Active Projects',      actual:projects.length, target:5, unit:''},
+      {label:'Team Utilisation',     actual:Math.round((Object.keys(userTaskMap).length/Math.max(activeUsers.length,1))*100), target:70, unit:'%'},
+    ].map(k => {
+      const diff = k.actual - k.target;
+      const gapColor = diff >= 0 ? '#4ade80' : '#f87171';
+      const gapText  = diff >= 0 ? `✓ +${diff}${k.unit} above target` : `▼ ${Math.abs(diff)}${k.unit} below target`;
+      const barW = Math.min(100, Math.round((k.actual/Math.max(k.target,1))*100));
+      const barColor = diff >= 0 ? '#22c55e' : (diff > -15 ? '#fbbf24' : '#ef4444');
+      return `<div class="kpi-row-item">
+        <div class="kpi-name">${k.label}</div>
+        <div class="kpi-row-top">
+          <span class="kpi-actual" style="color:${gapColor}">${k.actual}${k.unit}</span>
+          <span class="kpi-vs">vs</span>
+          <span class="kpi-target">target ${k.target}${k.unit}</span>
+        </div>
+        <div class="prog-track"><div class="prog-fill" style="width:${barW}%;background:${barColor}"></div></div>
+        <div class="kpi-gap" style="color:${gapColor}">${gapText}</div>
+      </div>`;
+    }).join('');
+
+    // Budget — monthly breakdown
+    const budgetEl = document.getElementById('budget-overview');
+    const projWithBudget = projects.filter(p=>p.budgetAllocated||p.monthlyBudget);
+    const curMonth = new Date().getMonth(); // 0-indexed
+    const curYear = new Date().getFullYear();
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    if (projWithBudget.length === 0) {
+      budgetEl.innerHTML = '<div style="color:rgba(255,255,255,0.2);font-size:12px;text-align:center;padding:16px">No budget data.<br>Set budget in VELOXA → project ⋯ → Monthly Budget</div>';
+    } else {
+      // Current month summary
+      let grandAlloc=0, grandUsed=0, grandMonthAlloc=0, grandMonthUsed=0;
+      projWithBudget.forEach(p=>{
+        grandAlloc += p.budgetAllocated||0;
+        grandUsed  += p.budgetUsed||0;
+        grandMonthAlloc += p.monthlyBudget?.[curYear]?.[curMonth]?.allocated||0;
+        grandMonthUsed  += p.monthlyBudget?.[curYear]?.[curMonth]?.used||0;
+      });
+
+      const grandSummary = `<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:12px;margin-bottom:12px">
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">This Month — ${MONTHS[curMonth]} ${curYear}</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:12px;color:rgba(255,255,255,0.5)">Allocated</span>
+          <span style="font-size:12px;font-weight:700;color:white">RM ${grandMonthAlloc.toLocaleString()}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px;color:rgba(255,255,255,0.5)">Used</span>
+          <span style="font-size:12px;font-weight:700;color:${grandMonthUsed>grandMonthAlloc?'#ef4444':'#34d399'}">RM ${grandMonthUsed.toLocaleString()}</span>
+        </div>
+        <div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px">
+          <div style="height:4px;background:${grandMonthUsed>grandMonthAlloc?'#ef4444':'#34d399'};border-radius:2px;width:${Math.min(100,grandMonthAlloc?Math.round(grandMonthUsed/grandMonthAlloc*100):0)}%"></div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Project</div>`;
+
+      budgetEl.innerHTML = grandSummary + projWithBudget.map(p => {
+        // Get current month data
+        const monthAlloc = p.monthlyBudget?.[curYear]?.[curMonth]?.allocated || 0;
+        const monthUsed  = p.monthlyBudget?.[curYear]?.[curMonth]?.used || 0;
+        const alloc = p.budgetAllocated||0;
+        const used  = p.budgetUsed||0;
+        const pct = Math.round((p.budgetUsed/p.budgetAllocated)*100);
+        const valColor = pct>80?'#f87171':pct>60?'#fbbf24':'#4ade80';
+        return `<div class="budget-item">
+          <div class="budget-top">
+            <span class="budget-name">${p.name}</span>
+            <span class="budget-val" style="color:${valColor};font-size:11px">${monthAlloc?`${MONTHS[curMonth]}: RM ${monthUsed.toLocaleString()}/${monthAlloc.toLocaleString()}`:`RM ${used.toLocaleString()}/${alloc.toLocaleString()}`}</span>
+          </div>
+          <div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${p.color||'#1a56db'}"></div></div>
+          <div class="proj-meta">${pct}% used</div>
+        </div>`;
+      }).join('');
+    }
+
+    // OT Hours — aggregate all projects this month
+    const otEl = document.getElementById('ot-overview');
+    const projWithOT = projects.filter(p => p.monthlyBudget?.[curYear]?.[curMonth]?.otHrs);
+    const allProjOT  = projects.filter(p => p.monthlyBudget); // projects with budget data
+
+    let grandOTPlanned = 0, grandOTActual = 0;
+    allProjOT.forEach(p => {
+      grandOTPlanned += p.monthlyBudget?.[curYear]?.[curMonth]?.otHrs?.planned || 0;
+      grandOTActual  += p.monthlyBudget?.[curYear]?.[curMonth]?.otHrs?.actual  || 0;
+    });
+
+    if (grandOTPlanned === 0 && grandOTActual === 0) {
+      otEl.innerHTML = '<div style="color:rgba(255,255,255,0.2);font-size:12px;text-align:center;padding:16px">No OT data.<br>Set in VELOXA → project ⋯ → Monthly Budget → OT Hours</div>';
+    } else {
+      const otPct = grandOTPlanned > 0 ? Math.round(grandOTActual / grandOTPlanned * 100) : 0;
+      const otColor = grandOTActual > grandOTPlanned && grandOTPlanned > 0 ? '#ef4444' : otPct >= 85 ? '#fbbf24' : '#34d399';
+      const otSummary = `
+        <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:12px;margin-bottom:12px">
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">${MONTHS[curMonth]} ${curYear} — All Projects</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:12px;color:rgba(255,255,255,0.5)">Planned</span>
+            <span style="font-size:12px;font-weight:700;color:white">${grandOTPlanned} hrs</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:12px;color:rgba(255,255,255,0.5)">Actual</span>
+            <span style="font-size:12px;font-weight:700;color:${otColor}">${grandOTActual} hrs</span>
+          </div>
+          <div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin-bottom:4px">
+            <div style="height:4px;background:${otColor};border-radius:2px;width:${Math.min(100,otPct)}%"></div>
+          </div>
+          <div style="text-align:right;font-size:10px;color:${otColor};font-weight:600">${grandOTPlanned > 0 ? otPct + '% utilized' : '—'}</div>
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Per Project</div>`;
+
+      const projRows = allProjOT.map(p => {
+        const planned = p.monthlyBudget?.[curYear]?.[curMonth]?.otHrs?.planned || 0;
+        const actual  = p.monthlyBudget?.[curYear]?.[curMonth]?.otHrs?.actual  || 0;
+        if (!planned && !actual) return '';
+        const pct = planned > 0 ? Math.round(actual / planned * 100) : 0;
+        const col = actual > planned && planned > 0 ? '#ef4444' : pct >= 85 ? '#fbbf24' : '#34d399';
+        const badge = actual > planned && planned > 0
+          ? `<span style="font-size:9px;background:rgba(239,68,68,0.15);color:#f87171;padding:1px 5px;border-radius:3px;font-weight:600">OT Exceeded</span>`
+          : `<span style="font-size:9px;background:rgba(52,211,153,0.1);color:#34d399;padding:1px 5px;border-radius:3px">${planned > 0 ? pct+'%' : '—'}</span>`;
+        return `<div class="budget-item">
+          <div class="budget-top">
+            <span class="budget-name">${p.name}</span>
+            ${badge}
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:10px;color:rgba(255,255,255,0.35)">Planned: ${planned} hrs</span>
+            <span style="font-size:10px;color:${col};font-weight:600">Actual: ${actual} hrs</span>
+          </div>
+          <div class="prog-track"><div class="prog-fill" style="width:${Math.min(100,pct)}%;background:${col}"></div></div>
+        </div>`;
+      }).filter(Boolean).join('');
+
+      otEl.innerHTML = otSummary + (projRows || '<div style="font-size:12px;color:rgba(255,255,255,0.2);text-align:center;padding:8px">No per-project breakdown</div>');
+    }
+
+    // Amendment Log — fetch latest amendments across all projects/tasks
+    const amdEl = document.getElementById('amendment-log');
+    const projFilter = document.getElementById('amd-proj-filter');
+    // Populate project filter
+    if (projFilter) {
+      projFilter.innerHTML = '<option value="">All Projects</option>' +
+        projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+    }
+    // Fetch amendments from all tasks (limit per task = 5, max 10 projects)
+    let allAmendments = [];
+    try {
+      const amdPromises = allTasks.slice(0, 200).map(t =>
+        db.collection('workspaces').doc('default').collection('projects')
+          .doc(t.projectId).collection('tasks').doc(t.id)
+          .collection('amendments').orderBy('at','desc').limit(5).get()
+          .then(snap => snap.docs.map(d=>({
+            ...d.data(), taskId:t.id, taskTitle:t.title||'—',
+            projectId:t.projectId, projectName:t.projectName||'—',
+            projectColor:t.projectColor||'#1a56db'
+          })))
+      );
+      const amdResults = await Promise.all(amdPromises);
+      amdResults.forEach(arr => allAmendments.push(...arr));
+      // Sort by timestamp desc
+      allAmendments.sort((a,b)=>{
+        const at = a.at?.toDate?a.at.toDate():new Date(0);
+        const bt = b.at?.toDate?b.at.toDate():new Date(0);
+        return bt-at;
+      });
+      window._allAmendments = allAmendments;
+      window._amdUsers = users;
+      renderAmendmentLog(allAmendments, users);
+    } catch(e) {
+      if(amdEl) amdEl.innerHTML = '<div style="color:rgba(255,255,255,0.2);font-size:12px;text-align:center;padding:16px">Failed to load amendment log.</div>';
+    }
+
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('exec-content').style.display  = 'block';
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('loading-state').innerHTML = `<div style="color:#f87171;text-align:center"><div style="font-size:24px;margin-bottom:10px">⚠️</div>${e.message}</div>`;
+  }
+}
+
+function gExecColor(uid) {
+  const colors=['#1a56db','#7c3aed','#db2777','#059669','#d97706','#dc2626','#0891b2','#65a30d'];
+  let h=0; for(let i=0;i<uid.length;i++) h=(h*31+uid.charCodeAt(i))%colors.length;
+  return colors[Math.abs(h)%colors.length];
+}
+function gExecInit(uid, users) {
+  const u = users.find(x=>x.id===uid);
+  return u ? (u.name||u.email||'?').split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2) : '?';
+}
+function gExecName(uid, users) {
+  const u = users.find(x=>x.id===uid);
+  return u ? (u.name||u.email||'Unknown') : 'Unknown';
+}
+
+function renderAmendmentLog(amendments, users) {
+  const amdEl = document.getElementById('amendment-log');
+  if (!amdEl) return;
+  if (!amendments || amendments.length === 0) {
+    amdEl.innerHTML = '<div style="color:rgba(255,255,255,0.2);font-size:12px;text-align:center;padding:20px">No amendment records yet.</div>';
+    return;
+  }
+  const FL = {dueDate:'Due Date',startDate:'Start Date',status:'Status',progress:'Progress',title:'Title',priority:'Priority'};
+  const SL = {todo:'Not Started',progress:'In Progress',review:'In Review',stuck:'Stuck',done:'Done'};
+  const rows = amendments.slice(0,50).map(a=>{
+    const uName = gExecName(a.by, users);
+    const when = a.at?.toDate ? a.at.toDate().toLocaleString('en-MY',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    const fmt = (ch,v) => { if(ch.field==='status') return SL[v]||v||'—'; if(ch.field==='progress') return (v||0)+'%'; return v||'—'; };
+    const changes = (a.changes||[]).map(ch=>`
+      <div class="amd-change">
+        <span class="amd-field">${FL[ch.field]||ch.field}:</span>
+        <span class="amd-from">${fmt(ch,ch.from)}</span>
+        <span style="color:rgba(255,255,255,0.2)">→</span>
+        <span class="amd-to">${fmt(ch,ch.to)}</span>
+      </div>`).join('');
+    return `<div class="amd-item">
+      <div class="amd-header">
+        <div class="amd-av" style="background:${gExecColor(a.by||'')}">${gExecInit(a.by||'',users)}</div>
+        <span class="amd-user">${uName}</span>
+        <span style="font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3);margin-left:4px">${a.projectName||'—'}</span>
+        <span class="amd-time">${when}</span>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:3px">📋 ${a.taskTitle}</div>
+      ${changes}
+    </div>`;
+  }).join('');
+  amdEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:8px">${rows}</div>`;
+}
+
+function filterAmendments() {
+  const projId = document.getElementById('amd-proj-filter')?.value;
+  const filtered = projId
+    ? (window._allAmendments||[]).filter(a=>a.projectId===projId)
+    : (window._allAmendments||[]);
+  renderAmendmentLog(filtered, window._amdUsers||[]);
+}
+</script>
+</body>
+</html>

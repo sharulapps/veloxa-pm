@@ -1,0 +1,92 @@
+// ============================================================================
+// VELOXA — Firestore security rules (DRAFT, NOT the live rules)
+//
+// Per docs/CHANGES-budget-excel.txt, the rules currently published in Firebase
+// Console allow any signed-in user to read/write. This file is the stricter
+// target. It is based on the original FIRESTORE_RULES.txt with the paths the
+// app now uses added (marked "ADDED").
+//
+// Before publishing: test every role (admin, manager, engineer, technician,
+// ceo) in Firebase Console → Firestore → Rules → Rules Playground.
+// Known gap vs current app behaviour: engineers cannot create tasks here
+// (create = manager/admin only). Decide if that is intended.
+// ============================================================================
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuth() { return request.auth != null; }
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    function isAdmin()   { return getRole() in ["admin","superadmin"]; }
+    function isExec()    { return getRole() in ["ceo","director","gm"]; }
+    function isManager() { return getRole() in ["manager","admin","superadmin"]; }
+
+    match /users/{uid} {
+      // ADDED: any signed-in user can read user profiles (app shows names/avatars of members)
+      allow read:  if isAuth();
+      allow write: if isAuth() && isAdmin();
+
+      // ADDED: in-app notifications — anyone signed in can send, only the owner reads/clears
+      match /notifications/{nid} {
+        allow create: if isAuth();
+        allow read, update, delete: if isAuth() && request.auth.uid == uid;
+      }
+      // ADDED: personal sticky notes
+      match /stickyNotes/{nid} {
+        allow read, write: if isAuth() && request.auth.uid == uid;
+      }
+    }
+
+    // ADDED: company settings (APP_CONFIG) — read by all pages, written from admin.html
+    match /settings/{docId} {
+      allow read:  if isAuth();
+      allow write: if isAuth() && isAdmin();
+    }
+
+    match /workspaces/{wsId} {
+      allow read: if isAuth();
+      match /projects/{projId} {
+        allow read: if isAuth() && (isAdmin() || isExec() || request.auth.uid in resource.data.members);
+        allow write: if isAuth() && isAdmin();
+        // Budget Monitor / Excel Plan vs Actual / OT remarks: manager & engineer (project members) may update budget fields only
+        allow update: if isAuth() && getRole() in ["manager","engineer"]
+                      && request.auth.uid in resource.data.members
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["monthlyBudget","budgetAllocated","budgetUsed"]);
+        match /tasks/{taskId} {
+          allow read: if isAuth() && (isAdmin() || isExec() || isManager() || request.auth.uid in get(/databases/$(database)/documents/workspaces/$(wsId)/projects/$(projId)).data.members);
+          allow create: if isAuth() && isManager();
+          allow update: if isAuth() && (isManager() || request.auth.uid in resource.data.assignees);
+          allow delete: if isAuth() && isManager();
+          // ADDED: recursive — covers subtasks, sub-subtasks (subtasks/{s}/subtasks/{ss}) and subtask comments
+          match /subtasks/{document=**} { allow read, write: if isAuth(); }
+          match /comments/{comId}       { allow read, write: if isAuth(); }
+          // ADDED: task change log (written on save, read by exec.html)
+          match /amendments/{amdId}     { allow read, create: if isAuth(); }
+        }
+        match /meetings/{meetId} {
+          allow read: if isAuth() && (isAdmin() || isExec() || isManager() || request.auth.uid in get(/databases/$(database)/documents/workspaces/$(wsId)/projects/$(projId)).data.members);
+          allow write: if isAuth() && isManager();
+        }
+        match /activity/{actId} { allow read, write: if isAuth(); }
+
+        // ── Project-level Chat ──
+        match /chat/{msgId} {
+          allow read: if isAuth() && (isAdmin() || isExec() || request.auth.uid in get(/databases/$(database)/documents/workspaces/$(wsId)/projects/$(projId)).data.members);
+          allow create: if isAuth();
+          allow update: if isAuth() && (
+            request.auth.uid == resource.data.userId ||
+            // Allow anyone to update reactions & threadCount only
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions','threadCount'])
+          );
+          allow delete: if isAuth() && request.auth.uid == resource.data.userId;
+
+          match /threads/{threadId} {
+            allow read, create: if isAuth();
+            allow delete: if isAuth() && request.auth.uid == resource.data.userId;
+          }
+        }
+      }
+    }
+  }
+}

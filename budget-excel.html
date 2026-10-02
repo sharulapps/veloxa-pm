@@ -1,0 +1,1591 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maintenance Budget Plan vs Actual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#eef0f2; --panel:#ffffff; --panel-2:#f6f7f8; --ink:#1b2127; --ink-2:#56606a; --ink-3:#8a939c;
+  --line:#d9dde1; --line-2:#e8ebee;
+  --plan:#5b6b7a; --actual:#1f6feb;
+  --done:#ffe45c; --done-ink:#4a3f00; --done-bg:#fff8cc;
+  --over:#c93a2b; --over-bg:#fde9e6; --under:#1f7a4d; --under-bg:#e3f4ea;
+  --pending:#8a939c; --pending-bg:#eef0f2;
+  --focus:#1f6feb;
+  --display:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#12161a; --panel:#1a1f24; --panel-2:#20262c; --ink:#e7eaed; --ink-2:#a7b0b8; --ink-3:#77818a;
+    --line:#2d353d; --line-2:#252c33; --plan:#8b9aa8; --actual:#5b9dff;
+    --done:#e8c93a; --done-ink:#1d1800; --done-bg:#3a3313;
+    --over:#ff7a6b; --over-bg:#3d1f1b; --under:#5cc98f; --under-bg:#16301f;
+    --pending-bg:#252c33; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12161a; --panel:#1a1f24; --panel-2:#20262c; --ink:#e7eaed; --ink-2:#a7b0b8; --ink-3:#77818a;
+  --line:#2d353d; --line-2:#252c33; --plan:#8b9aa8; --actual:#5b9dff;
+  --done:#e8c93a; --done-ink:#1d1800; --done-bg:#3a3313;
+  --over:#ff7a6b; --over-bg:#3d1f1b; --under:#5cc98f; --under-bg:#16301f;
+  --pending-bg:#252c33; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body.embedded .brand{display:none}
+body:not(.embedded) .vx-only{display:none}
+body.embedded .top{padding-block:10px}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--body);padding-inline:16px;padding-block:0 96px}
+.wrap{max-width:1280px;margin:0 auto;display:grid;gap:16px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:.01em}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* top bar */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding-block:18px 14px;border-bottom:1px solid var(--line)}
+.top h1{font-size:24px}
+.brand{display:grid;gap:2px;margin-right:auto}
+.eyebrow{font:600 11px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.brand h1{font-size:24px;font-weight:700}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:8px 14px;cursor:pointer;display:inline-flex;gap:8px;align-items:center;font-weight:500}
+.btn:hover{border-color:var(--ink-3)}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.accent{background:var(--done);color:var(--done-ink);border-color:var(--done)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+select.btn{padding-right:28px}
+.file-chip{font:500 12px var(--mono);color:var(--ink-2);background:var(--panel-2);border:1px dashed var(--line);border-radius:6px;padding:7px 10px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.status{font-size:12px;color:var(--ink-2);display:flex;gap:8px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--pending)}
+.dot.ok{background:var(--under)} .dot.busy{background:var(--done);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+@media (prefers-reduced-motion:reduce){.dot.busy{animation:none}}
+
+/* tabs */
+.tabs{display:flex;gap:4px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:4px}
+.tabs button{border:0;background:transparent;padding:8px 14px;border-radius:5px;cursor:pointer;font-weight:600}
+.tabs button small{font:500 10px var(--mono);color:var(--ink-3);margin-left:4px;letter-spacing:.04em}
+.tabs button[aria-selected="true"]{background:var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.tabpane{display:grid;gap:16px}
+.filebar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.filebar h2{font-size:22px}
+.pw{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;background:var(--done-bg);border:1px solid var(--done);border-radius:10px;padding:12px 14px}
+.pw input{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:7px 10px;min-width:160px}
+.sync{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--actual);border-radius:8px;padding:10px 14px;font-size:13px}
+.sync:empty{display:none}
+.sync .ok{color:var(--under);font-weight:600} .sync .warn{color:var(--over);font-weight:600}
+/* OT grid */
+table.grid{font-size:12px;width:auto}
+table.grid th,table.grid td{padding:4px 5px;text-align:center;border-right:1px solid var(--line-2)}
+table.grid th.day{min-width:44px}
+table.grid .sun{background:color-mix(in srgb,var(--actual) 9%,var(--panel))}
+table.grid th.sun{background:color-mix(in srgb,var(--actual) 16%,var(--panel-2))}
+table.grid .who{position:sticky;left:0;z-index:2;background:var(--panel);text-align:left;min-width:150px;font-weight:600;font-size:12px}
+table.grid th.who{z-index:3;background:var(--panel-2)}
+table.grid tr.plan td{color:var(--ink-3)}
+table.grid tr.person-end td{border-bottom:2px solid var(--line)}
+table.grid td input{width:52px;min-width:0;padding:3px 1px;text-align:center;font-size:12px}
+table.grid th.day{min-width:56px}
+table.grid .who .lbl{display:inline-block;margin-left:6px}
+table.grid tr.actual .who{color:var(--actual);font-weight:600}
+table.grid td.tot{font:500 12px var(--mono);text-align:right;white-space:nowrap}
+table.grid .lbl{font:600 10px var(--body);color:var(--ink-3);letter-spacing:.05em;display:block}
+table.grid tr.group td{background:var(--panel-2);text-align:left;font:700 12px var(--display);letter-spacing:.05em;text-transform:uppercase}
+
+/* drop zone */
+.drop{border:2px dashed var(--line);border-radius:10px;padding:28px;text-align:center;color:var(--ink-2);background:var(--panel)}
+.drop.hover{border-color:var(--actual);background:var(--panel-2)}
+.drop strong{color:var(--ink)}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+@media (max-width:600px){.kpi:last-child:nth-child(odd){grid-column:1/-1}}
+.kpi{background:var(--panel);padding:14px 16px;display:grid;gap:4px}
+.kpi .label{font-size:12px;color:var(--ink-2)}
+.kpi .val{font:600 22px var(--mono);font-variant-numeric:tabular-nums}
+.kpi .sub{font-size:12px;color:var(--ink-3)}
+.meter{height:6px;background:var(--line-2);border-radius:3px;overflow:hidden;margin-top:4px}
+.meter i{display:block;height:100%;background:var(--actual)}
+.meter i.over{background:var(--over)}
+
+/* panels */
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:12px;align-content:start;min-width:0}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.panel-h h2{font-size:18px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.sw{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+/* section bars */
+.bars{display:grid;gap:10px}
+.bar-row{display:grid;grid-template-columns:150px 1fr 110px;gap:10px;align-items:center;cursor:pointer;border-radius:6px;padding:2px 4px}
+.bar-row:hover{background:var(--panel-2)}
+.bar-name{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{display:grid;gap:3px}
+.bar{height:9px;border-radius:0 3px 3px 0;min-width:1px}
+.bar.p{background:var(--plan);opacity:.55}
+.bar.a{background:var(--actual)}
+.bar.a.over{background:var(--over)}
+.bar-val{font:500 11px var(--mono);text-align:right;color:var(--ink-2);line-height:1.3}
+.bar-val b{color:var(--ink);font-weight:500}
+@media (max-width:520px){.bar-row{grid-template-columns:96px 1fr}.bar-val{grid-column:2;text-align:left}}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line-2);text-align:left;vertical-align:middle}
+th{font:600 11px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);background:var(--panel-2);position:sticky;top:0;z-index:1}
+td.r,th.r{text-align:right}
+tr.total td{font-weight:600;background:var(--panel-2)}
+.var-pos{color:var(--under)} .var-neg{color:var(--over)} .warn{color:#b7791f}
+.bar-row.total-row{border-top:1.5px solid var(--line);padding-top:8px;margin-top:4px;cursor:default}
+.bar-row.total-row .bar-name{font-weight:800}
+.bar-row.total-row{grid-template-columns:150px 1fr 190px}
+@media (max-width:520px){.bar-row.total-row{grid-template-columns:96px 1fr}}
+
+/* items */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:var(--panel);padding:7px 12px;cursor:pointer;font-size:13px;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.search{flex:1;min-width:180px;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:7px 10px}
+.sec-head td{background:var(--panel-2);font:700 13px var(--display);letter-spacing:.04em;text-transform:uppercase;border-top:2px solid var(--line)}
+.sec-head .num{font-weight:500;font-size:12px;text-transform:none;letter-spacing:0;color:var(--ink-2)}
+tr.item.done td:first-child{box-shadow:inset 4px 0 0 var(--done)}
+tr.item.changed td{background:color-mix(in srgb,var(--actual) 7%,transparent)}
+.item-name{min-width:220px;max-width:360px;white-space:pre-line;line-height:1.3}
+.code{font:11px var(--mono);color:var(--ink-3)}
+td input{width:100%;min-width:70px;text-align:inherit;border:1px solid var(--line);background:var(--panel);border-radius:4px;padding:5px 7px;font:13px var(--mono);font-variant-numeric:tabular-nums}
+td input.txt{font-family:var(--body);min-width:110px}
+td input[type=date]{min-width:130px}
+td input.dirty{border-color:var(--actual);background:color-mix(in srgb,var(--actual) 10%,var(--panel))}
+.pill{display:inline-block;font:600 11px var(--body);padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.done{background:var(--done-bg);color:var(--ink)} .pill.done::before{content:"";display:inline-block;width:7px;height:7px;border-radius:2px;background:var(--done);margin-right:5px}
+.pill.over{background:var(--over-bg);color:var(--over)}
+.pill.pending{background:var(--pending-bg);color:var(--ink-2)}
+.ref{font:10px var(--mono);color:var(--ink-3)}
+
+/* save bar */
+.savebar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;z-index:5;transform:translateY(0);transition:transform .2s}
+.savebar[hidden]{display:none!important}
+.savebar .btn{background:transparent;color:var(--bg);border-color:color-mix(in srgb,var(--bg) 40%,transparent)}
+.savebar .btn.accent{background:var(--done);color:var(--done-ink);border-color:var(--done)}
+.log{font:12px var(--mono);color:var(--ink-2);display:grid;gap:4px;max-height:220px;overflow:auto}
+.log div{display:flex;gap:8px;flex-wrap:wrap}
+.log .t{color:var(--ink-3)}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:13px;z-index:10;box-shadow:0 6px 24px rgba(0,0,0,.2)}
+.note{font-size:12px;color:var(--ink-3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <span class="eyebrow">Maintenance · MNSB</span>
+      <h1>Maintenance Budget — Plan vs Actual</h1>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Modul">
+      <button role="tab" id="tabBtn-budget" aria-selected="true" data-tab="budget">Budget <small>SPAREPART</small></button>
+      <button role="tab" id="tabBtn-ot" aria-selected="false" data-tab="ot">Overtime <small>MAINT</small></button>
+    </nav>
+  </header>
+
+  <div class="status"><span class="dot busy" id="dot"></span><span id="statusTxt">Loading Python engine…</span></div>
+
+  <div id="tab-budget" class="tabpane">
+  <div class="filebar">
+    <h2 id="title">Budget</h2>
+    <div class="controls">
+      <span class="file-chip" id="fileChip" title="">No file</span>
+      <select class="btn" id="sheetSel" aria-label="Select budget sheet" disabled></select>
+      <label class="btn" for="fileIn">Upload .xlsx</label>
+      <input type="file" id="fileIn" accept=".xlsx" hidden>
+      <button class="btn accent vx-only" id="syncBtn" disabled title="Send this sheet's Plan/Actual to Budget Monitor">⇪ Sync to VELOXA</button>
+      <button class="btn primary" id="dlBtn" disabled>Download updated file</button>
+    </div>
+  </div>
+  <div class="drop" id="drop" hidden>
+    <strong>Drag & drop the budget file (.xlsx) here</strong><br>
+    <span class="note">e.g. 9.SEP26_SPAREPART.xlsx — all sheets, images, formatting & formulas are preserved.</span>
+  </div>
+
+  <section class="kpis" id="kpis" aria-label="Summary"></section>
+
+  <div class="grid2">
+    <section class="panel">
+      <div class="panel-h">
+        <h2>Plan vs Actual by category</h2>
+        <div class="legend"><span><i class="sw" style="background:var(--plan);opacity:.55"></i>Plan</span><span><i class="sw" style="background:var(--actual)"></i>Actual</span><span><i class="sw" style="background:var(--over)"></i>Over plan</span></div>
+      </div>
+      <div class="bars" id="bars"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-h"><h2>Summary (summary block in file)</h2></div>
+      <div class="tbl-wrap"><table id="summaryTbl"></table></div>
+      <p class="note">"Manual input" rows (e.g. OVERTIME) can be edited directly — other values follow the M/N formulas in the sheet and are recalculated after Save.</p>
+    </section>
+  </div>
+
+  <section class="panel">
+    <div class="panel-h">
+      <h2>Items — update actuals</h2>
+      <span class="note">Yellow row = actual entered (sheet convention). Edit directly, then Save.</span>
+    </div>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Filter">
+        <button data-f="all" aria-pressed="true">All</button>
+        <button data-f="pending" aria-pressed="false">No actual yet</button>
+        <button data-f="done" aria-pressed="false">Done</button>
+        <button data-f="over" aria-pressed="false">Over plan</button>
+      </div>
+      <input class="search" id="q" type="search" placeholder="Search item / maint code / supplier / PO…" aria-label="Search items">
+    </div>
+    <div class="tbl-wrap" style="max-height:70vh"><table id="itemsTbl"></table></div>
+  </section>
+
+  </div><!-- /tab-budget -->
+
+  <div id="tab-ot" class="tabpane" hidden>
+    <div class="filebar">
+      <h2 id="otTitle">Overtime</h2>
+      <div class="controls">
+        <span class="file-chip" id="otChip">No file</span>
+        <select class="btn" id="otSheetSel" aria-label="Select OT month" disabled></select>
+        <label class="btn" for="otFileIn">Upload MAINT .xlsx</label>
+        <input type="file" id="otFileIn" accept=".xlsx" hidden>
+        <button class="btn accent vx-only" id="otSyncBtn" disabled title="Send OT hours & RM to Budget Monitor">⇪ Sync to VELOXA</button>
+        <button class="btn primary" id="otDlBtn" disabled>Download updated file</button>
+      </div>
+    </div>
+    <form class="pw" id="otPwForm" hidden>
+      <span>🔒 This file is password-protected.</span>
+      <label for="otPw">Password</label>
+      <input id="otPw" type="password" autocomplete="off" required>
+      <button class="btn accent" type="submit">Open file</button>
+      <span class="note" id="otPwMsg">The same password will be reapplied on download.</span>
+    </form>
+    <div class="drop" id="otEmpty"><strong>Upload the MAINT (OT) file to start</strong><br><span class="note">e.g. MAINT_SEPT_26.xlsx — password-protected files are supported.</span></div>
+
+    <div id="otBody" hidden>
+      <section class="kpis" id="otKpis" aria-label="OT summary"></section>
+      <div class="sync" id="otSync"></div>
+      <div class="grid2">
+        <section class="panel">
+          <div class="panel-h"><h2>OT hours by person</h2>
+            <div class="legend"><span><i class="sw" style="background:var(--plan);opacity:.55"></i>Target</span><span><i class="sw" style="background:var(--actual)"></i>Actual</span><span><i class="sw" style="background:var(--over)"></i>Over target</span></div></div>
+          <div class="bars" id="otBars"></div>
+        </section>
+        <section class="panel">
+          <div class="panel-h"><h2>Summary by person</h2></div>
+          <div class="tbl-wrap"><table id="otSumTbl"></table></div>
+          <p class="note">RM = normal hours × 1.5 rate + Sunday/PH hours × 2.0 rate (per the sheet formula).</p>
+        </section>
+      </div>
+      <section class="panel">
+        <div class="panel-h">
+          <h2>Daily OT hours</h2>
+          <div class="seg" role="group" aria-label="Edit row">
+            <button data-m="actual" aria-pressed="true">Edit Actual</button>
+            <button data-m="plan" aria-pressed="false">Edit Plan</button>
+          </div>
+        </div>
+        <p class="note">Shaded columns = Sunday / public holiday (2.0 rate). Enter hours, then Save.</p>
+        <div class="tbl-wrap" style="max-height:72vh"><table id="otGrid" class="grid"></table></div>
+      </section>
+    </div>
+  </div><!-- /tab-ot -->
+
+  <section class="panel">
+    <div class="panel-h"><h2>Change log</h2><span class="note">Every update written to the file</span></div>
+    <div class="log" id="log"><span class="note">No changes yet.</span></div>
+  </section>
+</div>
+
+<div class="savebar" id="saveBar" hidden>
+  <span id="saveTxt">0 changes</span>
+  <button class="btn" id="discardBtn">Discard</button>
+  <button class="btn accent" id="applyBtn">Save to file</button>
+</div>
+
+<script type="text/python" id="engineSrc">"""
+budget_engine.py — MNSB Maintenance Budget (Plan vs Actual) engine.  Stdlib only.
+
+ * list_sheets(xlsx_bytes)                      -> ["DEC'25 rev 2", ..., "SEP'26 (6)"]
+ * parse_sheet(xlsx_bytes, sheet)               -> sections / items / summary (plan vs actual)
+ * apply_updates(xlsx_bytes, sheet, updates)    -> new xlsx bytes
+
+Format preservation: we never load/save the workbook through a library
+(openpyxl drops the WMF images in this file, rewrites styles, etc.). Only the
+target sheet's XML is edited — as text, row by row — and workbook.xml gets
+fullCalcOnLoad. Every other zip part is copied byte-for-byte.
+
+Runs in CPython and Pyodide (browser) with zero extra packages.
+"""
+import io
+import re
+import html
+import zipfile
+import datetime
+import xml.etree.ElementTree as ET
+
+NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+NSR = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+N = {"m": NS}
+EDITABLE_COLS = {"E", "H", "J", "K", "M", "N", "O"}  # formula cells are always refused
+EXCEL_EPOCH = datetime.date(1899, 12, 30)
+
+
+# ---------------------------------------------------------------- A1 helpers
+def _col_row(ref):
+    m = re.match(r"([A-Z]+)(\d+)$", ref)
+    return m.group(1), int(m.group(2))
+
+
+def _col_idx(col):
+    n = 0
+    for ch in col:
+        n = n * 26 + ord(ch) - 64
+    return n
+
+
+def _idx_col(n):
+    s = ""
+    while n:
+        n, r = divmod(n - 1, 26)
+        s = chr(65 + r) + s
+    return s
+
+
+def _num(x):
+    if isinstance(x, bool):
+        return 0
+    if isinstance(x, (int, float)):
+        return x
+    try:
+        return float(str(x).replace(",", ""))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _fmt_num(v):
+    v = float(v)
+    return str(int(v)) if v.is_integer() else repr(round(v, 10))
+
+
+# ---------------------------------------------------------------- workbook parts
+def _sheet_path(z, sheet_name):
+    wb = ET.fromstring(z.read("xl/workbook.xml"))
+    rels = ET.fromstring(z.read("xl/_rels/workbook.xml.rels"))
+    rid = None
+    for s in wb.iterfind(".//m:sheets/m:sheet", N):
+        if s.get("name") == sheet_name:
+            rid = s.get(f"{{{NSR}}}id")
+    if rid is None:
+        raise KeyError(f"Sheet not found: {sheet_name}")
+    for r in rels:
+        if r.get("Id") == rid:
+            t = r.get("Target").lstrip("/")
+            return t if t.startswith("xl/") else "xl/" + t
+    raise KeyError(rid)
+
+
+def _shared_strings(z):
+    if "xl/sharedStrings.xml" not in z.namelist():
+        return []
+    root = ET.fromstring(z.read("xl/sharedStrings.xml"))
+    out = []
+    for si in root.iterfind("m:si", N):
+        parts = [t.text or "" for t in si.findall("m:t", N)]
+        parts += [t.text or "" for t in si.findall("m:r/m:t", N)]  # rich text runs
+        out.append("".join(parts))
+    return out
+
+
+def _date_style_ids(z):
+    """cellXfs indexes whose number format is a date."""
+    try:
+        st = ET.fromstring(z.read("xl/styles.xml"))
+    except KeyError:
+        return set()
+    custom = {nf.get("numFmtId"): nf.get("formatCode", "")
+              for nf in st.iterfind("m:numFmts/m:numFmt", N)}
+    builtin_dates = {str(i) for i in list(range(14, 23)) + list(range(45, 48))}
+    out = set()
+    xfs = st.find("m:cellXfs", N)
+    for i, xf in enumerate(xfs if xfs is not None else []):
+        fid = xf.get("numFmtId", "0")
+        code = re.sub(r'"[^"]*"|\[[^\]]*\]', "", custom.get(fid, "")).lower()
+        if fid in builtin_dates or (code and re.search(r"[dy]", code)):
+            out.add(str(i))
+    return out
+
+
+# ---------------------------------------------------------------- sheet text model
+_ROW_RE = re.compile(r"<row\b([^>]*?)(?:/>|>(.*?)</row>)", re.S)
+_CELL_RE = re.compile(r"<c\b([^>]*?)(?:/>|>(.*?)</c>)", re.S)
+_ATTR_RE = re.compile(r'([\w:]+)="([^"]*)"')
+_F_RE = re.compile(r"<f\b([^>]*?)(?:/>|>(.*?)</f>)", re.S)
+_V_RE = re.compile(r"<v>(.*?)</v>", re.S)
+_T_RE = re.compile(r"<t\b[^>]*>(.*?)</t>", re.S)
+
+
+class Cell:
+    __slots__ = ("ref", "attrs", "inner", "raw", "dirty")
+
+    def __init__(self, raw, attrs, inner):
+        self.raw, self.inner, self.dirty = raw, inner or "", False
+        self.attrs = dict(_ATTR_RE.findall(attrs))
+        self.ref = self.attrs["r"]
+
+    @classmethod
+    def new(cls, ref, style=None):
+        c = cls.__new__(cls)
+        c.ref, c.attrs, c.inner, c.raw, c.dirty = ref, {"r": ref}, "", "", True
+        if style:
+            c.attrs["s"] = style
+        return c
+
+    @property
+    def formula_tag(self):
+        return _F_RE.search(self.inner)
+
+    def value(self, sst):
+        t = self.attrs.get("t")
+        if t == "inlineStr":
+            return html.unescape("".join(_T_RE.findall(self.inner))) or None
+        m = _V_RE.search(self.inner)
+        if not m:
+            return None
+        v = html.unescape(m.group(1))
+        if t == "s":
+            return sst[int(v)]
+        if t in ("str", "e"):
+            return v
+        if t == "b":
+            return v == "1"
+        try:
+            f = float(v)
+            return int(f) if f.is_integer() else f
+        except ValueError:
+            return v
+
+    def set_value(self, v):
+        self.attrs.pop("t", None)
+        if v is None or v == "":
+            self.inner = ""
+        elif isinstance(v, (int, float)):
+            self.inner = f"<v>{_fmt_num(v)}</v>"
+        else:
+            self.attrs["t"] = "inlineStr"
+            self.inner = f'<is><t xml:space="preserve">{html.escape(str(v), quote=False)}</t></is>'
+        self.dirty = True
+
+    def set_formula(self, f):
+        self.attrs.pop("t", None)
+        self.inner = f"<f>{html.escape(f, quote=False)}</f>"
+        self.dirty = True
+
+    def set_cached(self, num):
+        new = f"<v>{_fmt_num(num)}</v>"
+        upd = _V_RE.sub(lambda m: new, self.inner, count=1) if _V_RE.search(self.inner) else self.inner + new
+        if upd != self.inner:
+            self.inner, self.dirty = upd, True
+
+    def xml(self):
+        if not self.dirty:
+            return self.raw
+        order = ["r", "s", "t"] + [k for k in self.attrs if k not in ("r", "s", "t")]
+        a = " ".join(f'{k}="{self.attrs[k]}"' for k in order if k in self.attrs)
+        return f"<c {a}>{self.inner}</c>" if self.inner else f"<c {a}/>"
+
+
+class Row:
+    def __init__(self, m):
+        self.span = m.span()
+        self.attrs_raw = m.group(1)
+        self.rn = int(re.search(r'\br="(\d+)"', self.attrs_raw).group(1))
+        self.cells = [Cell(c.group(0), c.group(1), c.group(2))
+                      for c in _CELL_RE.finditer(m.group(2) or "")]
+        self.dirty = False
+
+    def get(self, col):
+        ref = f"{col}{self.rn}"
+        for c in self.cells:
+            if c.ref == ref:
+                return c
+        return None
+
+    def get_or_create(self, col, style=None):
+        c = self.get(col)
+        if c is None:
+            c = Cell.new(f"{col}{self.rn}", style)
+            ci = _col_idx(col)
+            pos = sum(1 for x in self.cells if _col_idx(_col_row(x.ref)[0]) < ci)
+            self.cells.insert(pos, c)
+            self.dirty = True
+        return c
+
+    def xml(self):
+        body = "".join(c.xml() for c in self.cells)
+        return f"<row{self.attrs_raw}>{body}</row>" if body else f"<row{self.attrs_raw}/>"
+
+    @property
+    def changed(self):
+        return self.dirty or any(c.dirty for c in self.cells)
+
+
+class Sheet:
+    def __init__(self, text, sst):
+        self.text, self.sst = text, sst
+        sd = re.search(r"<sheetData\b[^>]*>(.*)</sheetData>", text, re.S)
+        self.sd_off = sd.start(1)
+        self.rows = {}
+        for m in _ROW_RE.finditer(sd.group(1)):
+            r = Row(m)
+            self.rows[r.rn] = r
+
+    def cell(self, ref):
+        col, rn = _col_row(ref)
+        row = self.rows.get(rn)
+        return row.get(col) if row else None
+
+    def val(self, ref):
+        c = self.cell(ref)
+        return c.value(self.sst) if c else None
+
+    def cells(self):
+        """{ref: {'v', 'f', 's'}} with shared formulas expanded."""
+        out, masters, pending = {}, {}, []
+        for row in self.rows.values():
+            for c in row.cells:
+                fm = c.formula_tag
+                f = None
+                if fm:
+                    fa = dict(_ATTR_RE.findall(fm.group(1)))
+                    if fm.group(2):
+                        f = "=" + html.unescape(fm.group(2))
+                        if fa.get("t") == "shared":
+                            masters[fa.get("si")] = (html.unescape(fm.group(2)), c.ref)
+                    elif fa.get("t") == "shared":
+                        pending.append((c.ref, fa.get("si")))
+                out[c.ref] = {"v": c.value(self.sst), "f": f, "s": c.attrs.get("s")}
+        for ref, si in pending:
+            if si in masters:
+                text, mref = masters[si]
+                (mc, mr), (cc, cr) = _col_row(mref), _col_row(ref)
+                out[ref]["f"] = "=" + _shift_formula(text, cr - mr, _col_idx(cc) - _col_idx(mc))
+        return out
+
+    def serialize(self):
+        t = self.text
+        for row in sorted((r for r in self.rows.values() if r.changed),
+                          key=lambda r: r.span[0], reverse=True):
+            a, b = row.span
+            t = t[: self.sd_off + a] + row.xml() + t[self.sd_off + b:]
+        return t
+
+
+# ---------------------------------------------------------------- formulas
+def _shift_formula(f, dr, dc):
+    def mv(m):
+        cabs, col, rabs, row = m.group(1), m.group(2), m.group(3), int(m.group(4))
+        if not cabs:
+            col = _idx_col(_col_idx(col) + dc)
+        if not rabs:
+            row += dr
+        return f"{cabs}{col}{rabs}{row}"
+    return re.sub(r"(?<![A-Za-z_!])(\$?)([A-Z]{1,3})(\$?)(\d+)(?![\d(])", mv, f)
+
+
+_TOKEN = re.compile(r"\$?([A-Z]{1,3})\$?(\d+)(?::\$?([A-Z]{1,3})\$?(\d+))?")
+
+
+def _recalc(cells):
+    """Same-sheet evaluator: refs, ranges, SUM, + - * / ( ). Anything else is
+    skipped (Excel still recalcs on open because of fullCalcOnLoad)."""
+    cache = {}
+
+    def get(ref, depth=0):
+        if ref in cache:
+            return cache[ref]
+        c = cells.get(ref)
+        if c is None:
+            return 0
+        if not c["f"]:
+            return _num(c["v"]) if c["v"] not in (None, "") else 0
+        if depth > 300:
+            raise RecursionError
+        expr = c["f"][1:]
+        if "!" in expr or '"' in expr or re.search(r"\b(?!SUM\()[A-Z]{2,}\(", expr):
+            raise ValueError("unsupported")
+
+        def tok(m):
+            if m.group(3):
+                c1, r1 = _col_idx(m.group(1)), int(m.group(2))
+                c2, r2 = _col_idx(m.group(3)), int(m.group(4))
+                refs = [f"{_idx_col(ci)}{ri}" for ci in range(c1, c2 + 1) for ri in range(r1, r2 + 1)]
+                return "(" + "+".join(f"g('{x}')" for x in refs) + ")"
+            return f"g('{m.group(1)}{m.group(2)}')"
+
+        py = _TOKEN.sub(tok, expr).replace("SUM(", "S(")
+        if re.search(r"[^\sg()'A-Z0-9S+\-*/.,]", py):
+            raise ValueError("unsupported")
+        v = eval(py, {"__builtins__": {}}, {"g": lambda x: get(x, depth + 1),
+                                           "S": lambda *a: sum(a)})
+        cache[ref] = v
+        return v
+
+    out = {}
+    for ref, c in cells.items():
+        if c["f"]:
+            try:
+                out[ref] = float(get(ref))
+            except Exception:
+                pass
+    return out
+
+
+# ---------------------------------------------------------------- public API
+def list_sheets(data: bytes):
+    with zipfile.ZipFile(io.BytesIO(data)) as z:
+        wb = ET.fromstring(z.read("xl/workbook.xml"))
+        return [s.get("name") for s in wb.iterfind(".//m:sheets/m:sheet", N)
+                if s.get("state") not in ("hidden", "veryHidden")]
+
+
+def _load(data, sheet_name):
+    z = zipfile.ZipFile(io.BytesIO(data))
+    path = _sheet_path(z, sheet_name)
+    sh = Sheet(z.read(path).decode("utf-8"), _shared_strings(z))
+    return z, path, sh
+
+
+def parse_sheet(data: bytes, sheet_name: str):
+    z, _, sh = _load(data, sheet_name)
+    date_styles = _date_style_ids(z)
+    z.close()
+    cells = sh.cells()
+    val = lambda ref: cells.get(ref, {}).get("v")
+    fml = lambda ref: cells.get(ref, {}).get("f")
+    max_row = max(sh.rows) if sh.rows else 0
+    up = lambda ref: str(val(ref) or "").strip().upper()
+
+    sections, summary = [], []
+    r = 1
+    while r <= max_row:
+        if up(f"A{r}") == "NO" and up(f"C{r}") == "ITEMS":
+            name = next((str(val(f"A{k}")).strip() for k in range(r - 1, max(r - 4, 0), -1)
+                         if str(val(f"A{k}") or "").strip()), "")
+            sec = {"name": name, "header_row": r, "items": [], "subtotal_row": None}
+            k = r + 2
+            while k <= max_row:
+                a = val(f"A{k}")
+                if (fml(f"I{k}") or "").upper().startswith("=SUM(I") and not isinstance(a, (int, float)):
+                    sec["subtotal_row"] = k
+                    break
+                if up(f"A{k}") == "NO":
+                    break
+                if val(f"C{k}") not in (None, "") or val(f"D{k}") not in (None, ""):
+                    pq, pp = _num(val(f"D{k}")), _num(val(f"G{k}"))
+                    aq, ap = val(f"E{k}"), val(f"H{k}")
+                    j_f, j_v = fml(f"J{k}"), val(f"J{k}")
+                    act = _num(aq) * _num(ap) if (j_f or j_v in (None, "")) else _num(j_v)
+                    eta = val(f"O{k}")
+                    if isinstance(eta, (int, float)) and cells.get(f"O{k}", {}).get("s") in date_styles:
+                        eta = (EXCEL_EPOCH + datetime.timedelta(days=int(eta))).isoformat()
+                    sec["items"].append({
+                        "row": k, "no": a, "code": val(f"B{k}"),
+                        "item": str(val(f"C{k}") or "").strip(), "unit": val(f"F{k}"),
+                        "plan_qty": pq, "plan_price": pp, "plan_total": round(pq * pp, 2),
+                        "act_qty": aq, "act_price": ap, "act_total": round(act, 2),
+                        "act_total_is_formula": bool(j_f), "act_total_value": j_v,
+                        "po": val(f"K{k}"), "supplier": val(f"L{k}"),
+                        "remarks": val(f"M{k}"), "eta": eta,
+                    })
+                k += 1
+            sec["plan_total"] = round(sum(i["plan_total"] for i in sec["items"]), 2)
+            sec["act_total"] = round(sum(i["act_total"] for i in sec["items"]), 2)
+            sections.append(sec)
+            r = k + 1
+            continue
+        if up(f"K{r}") == "DESCRIPTION":
+            k = r + 1
+            while k <= max_row and val(f"K{k}") not in (None, ""):
+                summary.append({"row": k, "desc": str(val(f"K{k}")).strip(),
+                                "plan": round(_num(val(f"M{k}")), 2),
+                                "actual": round(_num(val(f"N{k}")), 2),
+                                # typed-in numbers (e.g. OVERTIME) are editable, formulas are not
+                                "plan_editable": not fml(f"M{k}"),
+                                "actual_editable": not fml(f"N{k}")})
+                k += 1
+            r = k
+            continue
+        r += 1
+
+    return {"sheet": sheet_name, "title": val("A2") or sheet_name,
+            "sections": sections, "summary": summary,
+            "plan_total": round(sum(s["plan_total"] for s in sections), 2),
+            "act_total": round(sum(s["act_total"] for s in sections), 2)}
+
+
+# ---------------------------------------------------------------- write back
+def _is_item_row(sh, rn):
+    c = sh.cell(f"A{rn}")
+    return c is not None and isinstance(c.value(sh.sst), (int, float))
+
+
+def _has_actual(sh, rn):
+    return sh.val(f"E{rn}") not in (None, "")
+
+
+def _borrow_style(sh, col, rn, date_styles=None):
+    """Style of the nearest cell in the same column (so borders / RM format match)."""
+    for k in range(1, 30):
+        for r in (rn - k, rn + k):
+            c = sh.cell(f"{col}{r}")
+            if c is None or not c.attrs.get("s"):
+                continue
+            if date_styles is None or c.attrs["s"] in date_styles:
+                return c.attrs["s"]
+    if date_styles:
+        for row in sh.rows.values():
+            for c in row.cells:
+                if c.ref.startswith(col) and c.attrs.get("s") in date_styles:
+                    return c.attrs["s"]
+    return None
+
+
+def _paint_like_done_row(sh, rn, date_styles):
+    """Sheet convention: once actual is in, the item row turns yellow.
+    Copy A..O styles from the nearest item row that already has actual."""
+    for k in range(1, 40):
+        for r in (rn - k, rn + k):
+            if r in sh.rows and _is_item_row(sh, r) and _has_actual(sh, r):
+                src, dst = sh.rows[r], sh.rows[rn]
+                for ci in range(1, 16):
+                    col = _idx_col(ci)
+                    sc = src.get(col)
+                    if sc is None or not sc.attrs.get("s"):
+                        continue
+                    dc = dst.get_or_create(col)
+                    if col == "O" and dc.attrs.get("s") in date_styles and sc.attrs["s"] not in date_styles:
+                        continue  # keep ETA date format
+                    if dc.attrs.get("s") != sc.attrs["s"]:
+                        dc.attrs["s"] = sc.attrs["s"]
+                        dc.dirty = True
+                return
+
+
+def apply_updates(data: bytes, sheet_name: str, updates: list, highlight: bool = True) -> bytes:
+    """
+    updates: [{"cell": "E29", "value": 1}, {"cell": "K29", "value": "PO-123"},
+              {"cell": "O29", "value": "2026-09-30"}]   (None / "" clears)
+    """
+    z, spath, sh = _load(data, sheet_name)
+    date_styles = _date_style_ids(z)
+    act_rows = set()
+
+    for u in updates:
+        ref = u["cell"].upper()
+        col, rn = _col_row(ref)
+        if col not in EDITABLE_COLS:
+            raise ValueError(f"{ref}: column {col} is not editable")
+        row = sh.rows.get(rn)
+        if row is None:
+            raise ValueError(f"{ref}: row {rn} not in sheet")
+        c = row.get(col) or row.get_or_create(col, _borrow_style(sh, col, rn))
+        if c.formula_tag:
+            raise ValueError(f"{ref} is a formula cell — not overwritten")
+        v = u.get("value")
+        if isinstance(v, str) and re.fullmatch(r"\s*-?\d+(\.\d+)?\s*", v) and col in ("E", "H", "J", "N"):
+            v = float(v)
+        if col == "O" and isinstance(v, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
+            v = (datetime.date.fromisoformat(v) - EXCEL_EPOCH).days
+            if c.attrs.get("s") not in date_styles:
+                ds = _borrow_style(sh, "O", rn, date_styles)
+                if ds:
+                    c.attrs["s"] = ds
+        c.set_value(v)
+        if col in ("E", "H", "J"):
+            act_rows.add(rn)
+
+    for rn in act_rows:
+        row = sh.rows[rn]
+        j = row.get("J")
+        # J = E*H once actual qty & price are in and J is still blank
+        if (j is None or (not j.formula_tag and j.value(sh.sst) in (None, ""))) and \
+                sh.val(f"E{rn}") not in (None, "") and sh.val(f"H{rn}") not in (None, ""):
+            j = row.get_or_create("J", _borrow_style(sh, "J", rn))
+            j.set_formula(f"E{rn}*H{rn}")
+        if highlight and _is_item_row(sh, rn) and _has_actual(sh, rn):
+            _paint_like_done_row(sh, rn, date_styles)
+
+    return _finish(z, spath, sh)
+
+
+def _finish(z, spath, sh):
+    """Recalc cached values, write the sheet back, copy every other part untouched."""
+    cells = sh.cells()
+    for ref, newv in _recalc(cells).items():
+        old = cells[ref]["v"]
+        if isinstance(old, (str, bool)):
+            continue
+        if old is None or abs(_num(old) - newv) > 1e-9:
+            sh.cell(ref).set_cached(newv)
+
+    new_sheet = sh.serialize().encode("utf-8")
+    wb_xml = z.read("xl/workbook.xml").decode("utf-8")
+    if "fullCalcOnLoad" not in wb_xml:
+        wb_xml = re.sub(r"<calcPr\b", '<calcPr fullCalcOnLoad="1"', wb_xml, count=1)
+
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as dst:
+        for item in z.infolist():
+            if item.filename == spath:
+                dst.writestr(item, new_sheet)
+            elif item.filename == "xl/workbook.xml":
+                dst.writestr(item, wb_xml.encode("utf-8"))
+            else:
+                dst.writestr(item, z.read(item.filename))
+    z.close()
+    return out.getvalue()
+
+
+# ================================================================ password-protected files
+def is_encrypted(data: bytes) -> bool:
+    """Excel 'Encrypt with password' files are OLE containers, not zips."""
+    return data[:8] == b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+
+
+def decrypt(data: bytes, password: str) -> bytes:
+    import msoffcrypto  # needs msoffcrypto-tool (+ cryptography, olefile)
+    f = msoffcrypto.OfficeFile(io.BytesIO(data))
+    try:
+        f.load_key(password=password)
+        out = io.BytesIO()
+        f.decrypt(out)
+    except Exception as e:
+        raise ValueError("Password salah atau fail rosak") from e
+    return out.getvalue()
+
+
+def encrypt(plain: bytes, password: str) -> bytes:
+    from msoffcrypto.format.ooxml import OOXMLFile
+    out = io.BytesIO()
+    OOXMLFile(io.BytesIO(plain)).encrypt(password, out)
+    return out.getvalue()
+
+
+# ================================================================ OVERTIME (MAINT_xxx.xlsx)
+# Block per person (6 rows):  r   = PLAN hours      (A = name, C = rate 1.5x)
+#                              r+1 = ACTUAL hours    (C = rate 2.0x)
+#                              r+2 = PLAN RM, r+3 = ACTUAL RM @1.5x, r+4 = ACTUAL RM @2.0x
+# AM = total normal-day hours, AN = total Sunday/PH hours, AO = budget RM, AP = actual RM.
+# Row 3 = day numbers; "TOTAL WEEK" columns are formulas.
+
+def parse_ot(data: bytes, sheet_name: str):
+    z, _, sh = _load(data, sheet_name)
+    z.close()
+    cells = sh.cells()
+    val = lambda ref: cells.get(ref, {}).get("v")
+    fml = lambda ref: cells.get(ref, {}).get("f")
+    up = lambda ref: str(val(ref) or "").strip().upper()
+
+    # header: find the row with NAME in A and day numbers after it
+    hdr = next((r for r in sorted(sh.rows) if up(f"A{r}") == "NAME"), 3)
+    days, col_of = [], {}
+    for c in sh.rows[hdr].cells:
+        col = _col_row(c.ref)[0]
+        v = c.value(sh.sst)
+        try:
+            d = int(float(str(v).strip()))
+        except (TypeError, ValueError):
+            continue
+        if 1 <= d <= 31 and _col_idx(col) >= 5:
+            days.append({"day": d, "col": col})
+            col_of[d] = col
+    tot = {}
+    for c in sh.rows[hdr].cells:
+        t = str(c.value(sh.sst) or "").upper()
+        col = _col_row(c.ref)[0]
+        if "NORMAL" in t: tot["normal"] = col
+        elif "SUN" in t: tot["sunph"] = col
+        elif "BUDGET" in t: tot["budget"] = col
+        elif "ACTUAL" in t: tot["actual"] = col
+
+    people, group, max_row = [], "", max(sh.rows)
+    sun_cols = set()
+    for r in range(hdr + 1, max_row + 1):
+        a = str(val(f"A{r}") or "").strip()
+        if a and up(f"D{r}") != "PLAN" and up(f"B{r}") == "" and "PUNCH" not in a.upper():
+            group = a  # e.g. ENGINEER STANDBY FOR BREAKDOWN
+        if up(f"D{r}") == "PLAN" and up(f"D{r+1}") == "ACTUAL" and up(f"B{r}").startswith("HOURS"):
+            f_sun = fml(f"{tot.get('sunph', 'AN')}{r}") or ""
+            sc = set(re.findall(r"([A-Z]{1,3})\d+", f_sun))
+            sun_cols |= sc
+            g = lambda ref: round(_num(val(ref)), 2)
+            people.append({
+                "name": a or f"Row {r}", "group": group, "row_plan": r, "row_actual": r + 1,
+                "rate15": _num(val(f"C{r}")), "rate20": _num(val(f"C{r+1}")),
+                "plan": {d["day"]: val(f"{d['col']}{r}") for d in days},
+                "actual": {d["day"]: val(f"{d['col']}{r+1}") for d in days},
+                "plan_hours": g(f"{tot.get('normal','AM')}{r}") + g(f"{tot.get('sunph','AN')}{r}"),
+                "actual_hours": g(f"{tot.get('normal','AM')}{r+1}") + g(f"{tot.get('sunph','AN')}{r+1}"),
+                "plan_rm": g(f"{tot.get('budget','AO')}{r}"),
+                "actual_rm": g(f"{tot.get('actual','AP')}{r}"),
+            })
+    total_row = next((r for r in sorted(sh.rows) if any(
+        str(c.value(sh.sst) or "").strip().upper() == "TOTAL" for c in sh.rows[r].cells
+        if _col_row(c.ref)[0] == tot.get("normal", "AM"))), None)
+    b_col, a_col = tot.get("budget", "AO"), tot.get("actual", "AP")
+    return {
+        "sheet": sheet_name, "title": val("A2") or sheet_name, "header_row": hdr,
+        "days": [dict(d, sunph=d["col"] in sun_cols) for d in days],
+        "people": people,
+        "total_plan_rm": round(_num(val(f"{b_col}{total_row}")), 2) if total_row else round(sum(p["plan_rm"] for p in people), 2),
+        "total_actual_rm": round(_num(val(f"{a_col}{total_row}")), 2) if total_row else round(sum(p["actual_rm"] for p in people), 2),
+        "total_cells": {"plan": f"{b_col}{total_row}", "actual": f"{a_col}{total_row}"} if total_row else None,
+        "total_plan_hours": round(sum(p["plan_hours"] for p in people), 2),
+        "total_actual_hours": round(sum(p["actual_hours"] for p in people), 2),
+    }
+
+
+def apply_ot_updates(data: bytes, sheet_name: str, updates: list) -> bytes:
+    """updates: [{"cell": "P5", "value": 3.5}, ...] — only daily hour cells of
+    PLAN / ACTUAL rows are accepted."""
+    info = parse_ot(data, sheet_name)
+    day_cols = {d["col"] for d in info["days"]}
+    hour_rows = {p["row_plan"] for p in info["people"]} | {p["row_actual"] for p in info["people"]}
+    z, spath, sh = _load(data, sheet_name)
+    for u in updates:
+        ref = u["cell"].upper()
+        col, rn = _col_row(ref)
+        if col not in day_cols or rn not in hour_rows:
+            raise ValueError(f"{ref}: bukan cell jam OT harian")
+        row = sh.rows[rn]
+        c = row.get(col)
+        if c is None:  # style from the nearest day cell in the same row
+            ci = _col_idx(col)
+            near = sorted((x for x in row.cells if x.attrs.get("s") and _col_row(x.ref)[0] in day_cols),
+                          key=lambda x: abs(_col_idx(_col_row(x.ref)[0]) - ci))
+            c = row.get_or_create(col, near[0].attrs["s"] if near else None)
+        if c.formula_tag:
+            raise ValueError(f"{ref} is a formula cell — not overwritten")
+        v = u.get("value")
+        if isinstance(v, str) and v.strip() != "":
+            v = float(v)
+        c.set_value(v)
+    return _finish(z, spath, sh)
+
+
+if __name__ == "__main__":
+    import sys
+    d = open(sys.argv[1], "rb").read()
+    sh = list_sheets(d)[-1]
+    p = parse_sheet(d, sh)
+    print(sh, "plan", p["plan_total"], "actual", p["act_total"])
+    for s in p["sections"]:
+        print(f"  {s['name']:<20} items={len(s['items']):>3} plan={s['plan_total']:>10} act={s['act_total']:>10}")
+    for s in p["summary"]:
+        print(f"  [summary] {s['desc']:<22} {s['plan']:>10} {s['actual']:>10}")
+</script>
+<script id="sampleData" type="application/octet-stream" data-name="__SAMPLE_NAME__">__SAMPLE_B64__</script>
+<script id="otSampleData" type="application/octet-stream" data-name="__OT_NAME__">__OT_B64__</script>
+<script>
+/* ============================================================
+   Budget Plan vs Actual module
+   - Python (budget_engine.py) runs in-browser via Pyodide: parse + write-back
+   - Hook onActualsApplied() is where VELOXA writes to Firestore
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const RM = n => (n == null || n === "" || isNaN(n)) ? "—" :
+  "RM" + Number(n).toLocaleString("en-MY", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const S = {
+  py: null, bytes: null, fileName: "", sheets: [], sheet: "", data: null,
+  pending: {},          // cell -> new value (staged edits)
+  original: {},         // cell -> value at load (to detect no-op edits)
+  log: [], filter: "all", q: ""
+};
+
+function status(txt, state){ $("#statusTxt").textContent = txt; $("#dot").className = "dot " + (state||""); }
+function toast(msg){ const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.append(t); setTimeout(() => t.remove(), 2600); }
+
+/* ---------- Python bridge (Web Worker) ----------
+   Pyodide runs in a dedicated Worker so parsing / decrypting / writing Excel
+   never blocks the page (or VELOXA, which embeds this page as a same-origin iframe). */
+const PYODIDE_URL = window.PYODIDE_URL || "https://cdn.jsdelivr.net/pyodide/v0.27.7/full/";
+function pyWorkerMain(){
+  const DEFS = [
+    'import sys, json; sys.path.insert(0, "/home/pyodide")',
+    'import budget_engine as be',
+    'def _list(b): return json.dumps(be.list_sheets(bytes(b.to_py())))',
+    'def _parse(b, sh): return json.dumps(be.parse_sheet(bytes(b.to_py()), sh), default=str)',
+    'def _apply(b, sh, ups): return be.apply_updates(bytes(b.to_py()), sh, json.loads(ups))',
+    'def _is_enc(b): return be.is_encrypted(bytes(b.to_py()))',
+    'def _decrypt(b, pw): return be.decrypt(bytes(b.to_py()), pw)',
+    'def _encrypt(b, pw): return be.encrypt(bytes(b.to_py()), pw)',
+    'def _ot_parse(b, sh): return json.dumps(be.parse_ot(bytes(b.to_py()), sh), default=str)',
+    'def _ot_apply(b, sh, ups): return be.apply_ot_updates(bytes(b.to_py()), sh, json.loads(ups))',
+  ].join("\n");
+  let py = null;
+  self.onmessage = async (e) => {
+    const { id, cmd, args } = e.data;
+    try {
+      let result = null;
+      if (cmd === "boot") {
+        importScripts(args[0] + "pyodide.js");
+        py = await loadPyodide({ indexURL: args[0] });
+        py.FS.mkdirTree("/home/pyodide");
+        py.FS.writeFile("/home/pyodide/budget_engine.py", args[1]);
+        py.runPython(DEFS);
+        result = true;
+      } else if (cmd === "crypto") {
+        await py.loadPackage(["cryptography", "micropip"]);
+        await py.pyimport("micropip").install(["msoffcrypto-tool==6.0.0", "olefile"]);
+        result = true;
+      } else if (cmd === "call") {
+        const [fn, ...a] = args;
+        const r = py.globals.get(fn)(...a);
+        if (r && typeof r === "object" && typeof r.toJs === "function") {   // Python bytes -> Uint8Array
+          result = new Uint8Array(r.toJs()); r.destroy();
+        } else result = r;
+      }
+      self.postMessage({ id, ok: true, result }, result instanceof Uint8Array ? [result.buffer] : []);
+    } catch (err) {
+      self.postMessage({ id, ok: false, error: String((err && err.message) || err) });
+    }
+  };
+}
+let PYW = null, pyReq = 0;
+const pyWait = {};
+function pyRun(cmd, args = []){
+  return new Promise((resolve, reject) => {
+    const id = ++pyReq; pyWait[id] = { resolve, reject };
+    PYW.postMessage({ id, cmd, args });
+  });
+}
+async function bootPython(){
+  const t0 = performance.now();
+  PYW = new Worker(URL.createObjectURL(new Blob(["(" + pyWorkerMain.toString() + ")()"], { type: "text/javascript" })));
+  PYW.onmessage = (e) => {
+    const { id, ok, result, error } = e.data, w = pyWait[id]; if (!w) return;
+    delete pyWait[id]; ok ? w.resolve(result) : w.reject(new Error(error));
+  };
+  PYW.onerror = (e) => { console.error("[py-worker]", e.message || e); };
+  await pyRun("boot", [PYODIDE_URL, $("#engineSrc").textContent]);
+  status(`Python engine ready (${((performance.now()-t0)/1000).toFixed(1)}s)`, "ok");
+}
+const pyCall = (fn, ...args) => pyRun("call", [fn, ...args]);
+const listSheets = async b => JSON.parse(await pyCall("_list", b));
+const parseSheet = async (b, sh) => JSON.parse(await pyCall("_parse", b, sh));
+const applyUpdates = (b, sh, ups) => pyCall("_apply", b, sh, JSON.stringify(ups));
+
+/* ---------- load file ---------- */
+async function loadBytes(u8, name){
+  status("Reading file…", "busy");
+  try{
+    S.bytes = u8; S.fileName = name;
+    S.sheets = await listSheets(u8);
+    const sel = $("#sheetSel");
+    sel.innerHTML = S.sheets.map(s => `<option>${esc(s)}</option>`).join("");
+    sel.disabled = false;
+    S.sheet = S.sheets[S.sheets.length - 1];   // latest revision by default
+    sel.value = S.sheet;
+    $("#fileChip").textContent = name; $("#fileChip").title = name;
+    $("#dlBtn").disabled = false; $("#syncBtn").disabled = false;
+    S.log = []; renderLog();
+    await loadSheet();
+    status(`${S.sheets.length} sheet(s) found · showing ${S.sheet}`, "ok");
+  }catch(e){
+    console.error(e);
+    status("Cannot read file: " + (String(e).includes("encrypted") || String(e).includes("zip") ? "file is password-protected or not .xlsx. Remove the password in Excel first." : e.message), "");
+  }
+}
+async function loadSheet(){
+  S.data = await parseSheet(S.bytes, S.sheet);
+  S.pending = {}; S.original = {};
+  for (const s of S.data.summary) Object.assign(S.original, {[`M${s.row}`]: s.plan, [`N${s.row}`]: s.actual});
+  for (const sec of S.data.sections) for (const it of sec.items){
+    const r = it.row;
+    Object.assign(S.original, {[`E${r}`]: it.act_qty, [`H${r}`]: it.act_price, [`K${r}`]: it.po,
+      [`M${r}`]: it.remarks, [`O${r}`]: it.eta, [`J${r}`]: it.act_total_value});
+  }
+  render();
+}
+
+/* ---------- derived ---------- */
+function itemState(it){
+  const r = it.row, p = S.pending;
+  const q = (`E${r}` in p) ? p[`E${r}`] : it.act_qty;
+  const pr = (`H${r}` in p) ? p[`H${r}`] : it.act_price;
+  const hard = !it.act_total_is_formula && it.act_total_value != null && it.act_total_value !== "";
+  let act;
+  if (hard) act = Number((`J${r}` in p) ? p[`J${r}`] : it.act_total_value) || 0;
+  else act = (Number(q) || 0) * (Number(pr) || 0);
+  const hasActual = hard ? act > 0 || (q !== null && q !== "" ) : (q !== null && q !== "" && q !== undefined);
+  const status = !hasActual ? "pending" : (act > it.plan_total + 0.005 ? "over" : "done");
+  return {q, pr, act, hard, status};
+}
+function sectionTotals(sec){
+  let plan = 0, act = 0, done = 0;
+  for (const it of sec.items){ const s = itemState(it); plan += it.plan_total; act += s.act; if (s.status !== "pending") done++; }
+  return {plan, act, done, n: sec.items.length};
+}
+
+/* ---------- render ---------- */
+function render(){
+  if (!S.data) return;
+  $("#title").textContent = S.data.title || "Maintenance Budget";
+  renderKpis(); renderBars(); renderSummary(); renderItems(); renderSaveBar();
+  if (typeof O !== "undefined" && O.data) renderOTSync(otGrand());
+}
+function renderKpis(){
+  const secs = S.data.sections.map(sectionTotals);
+  const plan = secs.reduce((a,s)=>a+s.plan,0), act = secs.reduce((a,s)=>a+s.act,0);
+  const n = secs.reduce((a,s)=>a+s.n,0), done = secs.reduce((a,s)=>a+s.done,0);
+  const tot = S.data.summary.find(s => /^TOTAL$/i.test(s.desc));
+  const pct = plan ? act/plan*100 : 0;
+  const over = S.data.sections.flatMap(s=>s.items).filter(it => itemState(it).status === "over").length;
+  const k = [
+    ["Plan (item parts)", RM(plan), `${S.data.sections.length} categories`],
+    ["Actual (item parts)", RM(act), `<div class="meter"><i class="${pct>100?'over':''}" style="width:${Math.min(pct,100)}%"></i></div>${pct.toFixed(1)}% of plan`],
+    ["Balance / (Overspend)", `<span class="${plan-act>=0?'var-pos':'var-neg'}">${RM(plan-act)}</span>`, "Plan − Actual"],
+    ["Items with actual", `${done} / ${n}`, `${n-done} pending · ${over} over plan`],
+  ];
+  if (tot) k.push(["TOTAL (inc. overtime)", RM(tot.actual), `Plan ${RM(tot.plan)}`]);
+  $("#kpis").innerHTML = k.map(([l,v,s]) => `<div class="kpi"><span class="label">${l}</span><span class="val">${v}</span><span class="sub">${s}</span></div>`).join("");
+}
+function renderBars(){
+  const rows = S.data.sections.map(s => ({name: s.name, ...sectionTotals(s)})).filter(s => s.plan || s.act);
+  const max = Math.max(1, ...rows.map(r => Math.max(r.plan, r.act)));
+  $("#bars").innerHTML = rows.map(r => `
+    <div class="bar-row" data-sec="${esc(r.name)}" title="Filter to ${esc(r.name)}">
+      <span class="bar-name">${esc(r.name)}</span>
+      <span class="bar-track">
+        <span class="bar p" style="width:${r.plan/max*100}%"></span>
+        <span class="bar a ${r.act>r.plan+0.005?'over':''}" style="width:${r.act/max*100}%"></span>
+      </span>
+      <span class="bar-val">${RM(r.plan)}<br><b>${RM(r.act)}</b></span>
+    </div>`).join("");
+}
+function renderSummary(){
+  const rows = S.data.summary;
+  if (!rows.length){ $("#summaryTbl").innerHTML = `<tr><td class="note">No summary block in this sheet.</td></tr>`; return; }
+  const cellVal = (ref, v) => (ref in S.pending) ? Number(S.pending[ref]) || 0 : v;
+  $("#summaryTbl").innerHTML = `<thead><tr><th>Item</th><th class="r">Plan</th><th class="r">Actual</th><th class="r">Balance</th></tr></thead><tbody>` +
+    rows.map(s => {
+      const p = cellVal(`M${s.row}`, s.plan), a = cellVal(`N${s.row}`, s.actual), v = p - a;
+      const isTot = /total/i.test(s.desc);
+      const pc = s.plan_editable ? inp(`M${s.row}`, s.plan, "", "number") : RM(s.plan);
+      const ac = s.actual_editable ? inp(`N${s.row}`, s.actual, "", "number") : RM(s.actual);
+      return `<tr class="${isTot?'total':''}"><td>${esc(s.desc)}${s.actual_editable?' <span class="pill pending">input manual</span>':''}</td><td class="r num">${pc}</td><td class="r num">${ac}</td><td class="r num ${v>=0?'var-pos':'var-neg'}">${RM(v)}</td></tr>`;}).join("") + `</tbody>`;
+}
+function inp(cell, val, cls, type){
+  const dirty = cell in S.pending;
+  const v = dirty ? S.pending[cell] : val;
+  return `<input class="${cls||''} ${dirty?'dirty':''}" type="${type||'text'}" ${type==='number'?'step="any" inputmode="decimal"':''} data-cell="${cell}" value="${esc(v ?? "")}" aria-label="${cell}">`;
+}
+function renderItems(){
+  const q = S.q.toLowerCase();
+  let html = `<thead><tr><th>No</th><th>Item</th><th>Unit</th><th class="r">Plan qty</th><th>Actual qty</th><th class="r">Plan price</th><th>Actual price</th><th class="r">Plan total</th><th class="r">Actual total</th><th>Status</th><th>P.O No.</th><th>ETA</th><th>Remarks</th></tr></thead><tbody>`;
+  for (const sec of S.data.sections){
+    const items = sec.items.filter(it => {
+      const st = itemState(it).status;
+      if (S.filter !== "all" && st !== S.filter) return false;
+      if (!q) return true;
+      return [it.item, it.code, it.supplier, it.po, it.remarks].some(x => String(x ?? "").toLowerCase().includes(q));
+    });
+    if (!items.length) continue;
+    const t = sectionTotals(sec);
+    html += `<tr class="sec-head" id="sec-${esc(sec.name)}"><td colspan="13">${esc(sec.name)} <span class="num">· plan ${RM(t.plan)} · actual ${RM(t.act)} · ${t.done}/${t.n} done</span></td></tr>`;
+    for (const it of items){
+      const s = itemState(it), r = it.row;
+      const changed = Object.keys(S.pending).some(c => +c.slice(1) === r);
+      const pill = {pending:`<span class="pill pending">Pending</span>`, done:`<span class="pill done">Done</span>`, over:`<span class="pill over">Over +${RM(s.act-it.plan_total)}</span>`}[s.status];
+      html += `<tr class="item ${s.status!=='pending'?'done':''} ${changed?'changed':''}">
+        <td class="num">${esc(it.no)}<div class="ref">R${r}</div></td>
+        <td><div class="item-name">${esc(it.item)}</div><div class="code">${esc(it.code && it.code!=='N/A'?it.code:'')}${it.supplier && !/^https?:/.test(it.supplier)?' · '+esc(it.supplier):''}</div></td>
+        <td>${esc(it.unit)}</td>
+        <td class="r num">${it.plan_qty}</td>
+        <td>${s.hard ? '<span class="note">lot</span>' : inp(`E${r}`, it.act_qty, "", "number")}</td>
+        <td class="r num">${RM(it.plan_price)}</td>
+        <td>${s.hard ? '' : inp(`H${r}`, it.act_price, "", "number")}</td>
+        <td class="r num">${RM(it.plan_total)}</td>
+        <td class="r num">${s.hard ? inp(`J${r}`, it.act_total_value, "", "number") : (s.status==='pending' ? '—' : RM(s.act))}</td>
+        <td>${pill}</td>
+        <td>${inp(`K${r}`, it.po, "txt")}</td>
+        <td>${inp(`O${r}`, /^\d{4}-\d{2}-\d{2}$/.test(it.eta||"") ? it.eta : "", "", "date")}</td>
+        <td>${inp(`M${r}`, it.remarks, "txt")}</td>
+      </tr>`;
+    }
+  }
+  $("#itemsTbl").innerHTML = html + `</tbody>`;
+}
+let TAB = "budget";
+const activePending = () => TAB === "ot" ? O.pending : S.pending;
+function renderSaveBar(){
+  const n = Object.keys(activePending()).length;
+  $("#saveBar").hidden = n === 0;
+  $("#saveTxt").textContent = `${n} unsaved change(s)`;
+}
+function renderLog(){
+  $("#log").innerHTML = S.log.length ? S.log.slice().reverse().map(l =>
+    `<div><span class="t">${l.t}</span><span>${esc(l.file||"")}</span><span>${esc(l.sheet)}!${l.cell}</span><span>${esc(l.item)}</span><span>${esc(l.from ?? "∅")} → <b>${esc(l.to === "" ? "∅" : l.to)}</b></span></div>`).join("")
+    : `<span class="note">No changes yet.</span>`;
+}
+
+/* ---------- edits ---------- */
+document.addEventListener("change", e => {
+  const el = e.target.closest("#tab-budget input[data-cell]"); if (!el) return;
+  const cell = el.dataset.cell;
+  let v = el.value.trim();
+  if (el.type === "number" && v !== "") v = Number(v);
+  const orig = S.original[cell];
+  if ((orig ?? "") === v || String(orig ?? "") === String(v)) delete S.pending[cell]; else S.pending[cell] = v;
+  const y = window.scrollY; render(); window.scrollTo(0, y);
+});
+$("#discardBtn").onclick = () => { if (TAB === "ot") { O.pending = {}; renderOT(); } else { S.pending = {}; render(); } };
+$("#applyBtn").onclick = () => TAB === "ot" ? applyOT() : applyBudget();
+function applyBudget(){
+  const ups = Object.entries(S.pending).map(([cell, value]) => ({cell, value}));
+  status("Python is writing to the file…", "busy");
+  setTimeout(async () => {
+    try{
+      const t0 = performance.now();
+      const itemsByRow = Object.fromEntries([...S.data.sections.flatMap(s => s.items).map(i => [i.row, i.item]), ...S.data.summary.map(s => [s.row, s.desc])]);
+      S.bytes = await applyUpdates(S.bytes, S.sheet, ups);
+      const now = new Date().toLocaleTimeString("en-MY", {hour:"2-digit", minute:"2-digit"});
+      for (const u of ups) S.log.push({t: now, file: "Budget", sheet: S.sheet, cell: u.cell, item: (itemsByRow[+u.cell.slice(1)]||"").split("\n")[0].slice(0,40), from: S.original[u.cell], to: u.value});
+      await loadSheet(); renderLog();
+      onActualsApplied(S.data, ups);
+      status(`${ups.length} cell(s) updated in ${Math.round(performance.now()-t0)} ms · ready to download`, "ok");
+      toast(`${ups.length} change(s) saved to file`);
+    }catch(e){ console.error(e); status("Save failed: " + e.message, ""); }
+  }, 20);
+}
+/* ================= VELOXA bridge (iframe <-> app.html) ================= */
+const EMBED = window.parent !== window;
+function postToParent(kind, reason){
+  if (!EMBED) return;
+  let payload = null;
+  if (kind === "budget" && S.data){
+    const secs = S.data.sections.map(s => { const t = sectionTotals(s); return {name: s.name, plan: +t.plan.toFixed(2), actual: +t.act.toFixed(2), items: t.n, done: t.done}; });
+    payload = { kind, reason, file: S.fileName, sheet: S.sheet, title: S.data.title,
+      planTotal: +secs.reduce((a,s)=>a+s.plan,0).toFixed(2), actualTotal: +secs.reduce((a,s)=>a+s.actual,0).toFixed(2),
+      sections: secs, summary: S.data.summary.map(s => ({desc: s.desc, plan: s.plan, actual: s.actual})) };
+  }
+  if (kind === "ot" && O.data){
+    const g = otGrand();
+    payload = { kind, reason, file: O.fileName, sheet: O.sheet, title: O.data.title,
+      totalPlanRM: +g.planRM.toFixed(2), totalActualRM: +g.actRM.toFixed(2), totalPlanHours: g.planH, totalActualHours: g.actH,
+      individuals: O.data.people.map(p => { const t = otTotals(p); return {name: p.name.trim(), planned: t.planH, actual: t.actH, plannedRM: +t.planRM.toFixed(2), actualRM: +t.actRM.toFixed(2)}; }) };
+  }
+  if (payload) window.parent.postMessage({type: "veloxa-budget-excel", payload}, location.origin);
+}
+window.addEventListener("message", e => {
+  if (e.origin !== location.origin || !e.data || e.data.type !== "veloxa-init") return;
+  const cfg = e.data.config || {};
+  if (cfg.otPassword) {
+    O.autoPassword = cfg.otPassword;
+    if (O.enc && !O.bytes && !$("#otPwForm").hidden) { $("#otPw").value = cfg.otPassword; $("#otPwForm").requestSubmit(); }
+  }
+  if (cfg.tab) switchTab(cfg.tab);
+});
+window.addEventListener("message", e => {
+  if (e.origin !== location.origin || !e.data || e.data.type !== "veloxa-sync-result") return;
+  const r = e.data;
+  if (r.ok) { status(r.message, "ok"); toast(r.message); } else { status("Sync failed: " + r.message, ""); toast("Sync failed: " + r.message); }
+});
+if (EMBED) window.addEventListener("load", () => window.parent.postMessage({type: "veloxa-budget-excel-ready"}, location.origin));
+
+function onActualsApplied(parsed, updates){
+  postToParent("budget", "save");
+  /* VELOXA: write to Firestore here, e.g.:
+     db.collection(`tenants/${tid}/budgets`).doc(`${parsed.sheet}`).set({
+       sheet: parsed.sheet, plan: parsed.plan_total, actual: parsed.act_total,
+       sections: parsed.sections.map(s => ({name:s.name, plan:s.plan_total, actual:s.act_total})),
+       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+     }, {merge:true});
+     + save the updated file to Storage / R2 as a new version. */
+}
+
+/* ---------- UI wiring ---------- */
+$("#sheetSel").onchange = async e => {
+  if (Object.keys(S.pending).length) { toast("Save or discard your changes first"); e.target.value = S.sheet; return; }
+  S.sheet = e.target.value; status("Membaca sheet…", "busy");
+  try { await loadSheet(); status(`Showing ${S.sheet}`, "ok"); } catch(err){ console.error(err); status("Failed to read sheet: " + err.message, ""); }
+};
+document.querySelectorAll("#tab-budget .seg button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#tab-budget .seg button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  S.filter = b.dataset.f; renderItems();
+});
+$("#q").oninput = e => { S.q = e.target.value; renderItems(); };
+$("#bars").onclick = e => { const r = e.target.closest(".bar-row"); if (!r) return;
+  document.getElementById("sec-" + r.dataset.sec)?.scrollIntoView({behavior:"smooth", block:"start"}); };
+async function readFile(f){
+  if (!f) return;
+  if (Object.keys(S.pending).length) { toast("Save or discard your changes first"); return; }
+  loadBytes(new Uint8Array(await f.arrayBuffer()), f.name);
+}
+$("#fileIn").onchange = e => readFile(e.target.files[0]);
+const drop = $("#drop");
+["dragenter","dragover"].forEach(t => document.addEventListener(t, e => { e.preventDefault(); if (TAB === "budget") { drop.hidden = false; drop.classList.add("hover"); } }));
+document.addEventListener("dragleave", e => { if (!e.relatedTarget) { drop.classList.remove("hover"); if (S.bytes) drop.hidden = true; } });
+document.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("hover"); if (S.bytes) drop.hidden = true;
+  const f = e.dataTransfer.files[0]; if (!f) return;
+  if (TAB === "ot" || /MAINT/i.test(f.name)) { switchTab("ot"); readOTFile(f); } else { switchTab("budget"); readFile(f); } });
+function saveFile(u8, name){
+  const blob = new Blob([u8], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+$("#dlBtn").onclick = () => {
+  if (Object.keys(S.pending).length) { toast("You have unsaved changes — press Save to file first"); return; }
+  saveFile(S.bytes, S.fileName);
+};
+
+$("#syncBtn").onclick = () => {
+  if (Object.keys(S.pending).length) { toast("Save your changes before syncing"); return; }
+  postToParent("budget", "manual"); toast(`Syncing ${S.sheet} to VELOXA…`);
+};
+$("#otSyncBtn") && ($("#otSyncBtn").onclick = () => {
+  if (Object.keys(O.pending).length) { toast("Save your OT changes before syncing"); return; }
+  postToParent("ot", "manual"); toast(`Syncing OT ${O.sheet} to VELOXA…`);
+});
+
+/* ================= TABS ================= */
+function switchTab(tab){
+  TAB = tab;
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
+  $("#tab-budget").hidden = tab !== "budget"; $("#tab-ot").hidden = tab !== "ot";
+  renderSaveBar();
+}
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+
+/* ================= OVERTIME (MAINT) ================= */
+const O = { raw:null, bytes:null, enc:false, password:"", fileName:"", sheets:[], sheet:"", data:null,
+            pending:{}, original:{}, mode:"actual", cryptoReady:false };
+const toU8 = py => { const u = new Uint8Array(py.toJs()); py.destroy(); return u; };
+const H = n => (Math.round(n*100)/100).toLocaleString("en-MY", {maximumFractionDigits:2});
+
+async function ensureCrypto(){
+  if (O.cryptoReady) return;
+  status("Loading password module (cryptography + msoffcrypto)…", "busy");
+  await pyRun("crypto");
+  O.cryptoReady = true;
+}
+async function readOTFile(f){
+  if (!f) return;
+  if (Object.keys(O.pending).length) { toast("Save or discard your OT changes first"); return; }
+  loadOTRaw(new Uint8Array(await f.arrayBuffer()), f.name).catch(err => { console.error(err); status("Cannot read OT file: " + err.message, ""); });
+}
+async function loadOTRaw(u8, name){
+  O.raw = u8; O.fileName = name; O.bytes = null; O.data = null;
+  $("#otChip").textContent = name; $("#otEmpty").hidden = true; $("#otBody").hidden = true;
+  if (await pyCall("_is_enc", u8)) {
+    O.enc = true; $("#otPwForm").hidden = false; $("#otPw").value = ""; $("#otPw").focus();
+    $("#otPwMsg").textContent = "The same password will be reapplied on download.";
+    status("OT file is password-protected — enter the password", "");
+    if (O.autoPassword) { $("#otPw").value = O.autoPassword; $("#otPwForm").requestSubmit(); }
+  } else { O.enc = false; O.password = ""; await openOT(u8); }
+}
+$("#otPwForm").onsubmit = async e => {
+  e.preventDefault();
+  try{
+    await ensureCrypto();
+    status("Opening file…", "busy");
+    const pw = $("#otPw").value;
+    const plain = await pyCall("_decrypt", O.raw, pw);
+    O.password = pw; $("#otPwForm").hidden = true; await openOT(plain);
+  }catch(err){
+    console.error(err);
+    const msg = String(err.message || err).includes("Password salah") ? "Wrong password — try again." : "Failed to open: " + (err.message || err);
+    $("#otPwMsg").textContent = msg; status(msg, "");
+  }
+};
+async function openOT(plain){
+  O.bytes = plain;
+  O.sheets = await listSheets(plain);
+  const sel = $("#otSheetSel");
+  sel.innerHTML = O.sheets.map(s => `<option>${esc(s)}</option>`).join(""); sel.disabled = false;
+  O.sheet = O.sheets[O.sheets.length - 1]; sel.value = O.sheet;
+  $("#otDlBtn").disabled = false; $("#otSyncBtn").disabled = false; $("#otBody").hidden = false;
+  await loadOTSheet();
+  status(`OT: ${O.sheets.length} month(s) found · showing ${O.sheet}`, "ok");
+}
+async function loadOTSheet(){
+  O.data = JSON.parse(await pyCall("_ot_parse", O.bytes, O.sheet));
+  O.pending = {}; O.original = {};
+  for (const p of O.data.people) for (const d of O.data.days){
+    O.original[`${d.col}${p.row_plan}`] = p.plan[d.day]; O.original[`${d.col}${p.row_actual}`] = p.actual[d.day];
+  }
+  renderOT();
+}
+function otVal(p, kind, d){
+  const ref = `${d.col}${kind === "plan" ? p.row_plan : p.row_actual}`;
+  return (ref in O.pending) ? O.pending[ref] : p[kind][d.day];
+}
+function otTotals(p){
+  const r = {planH:0, actH:0, planRM:0, actRM:0};
+  for (const d of O.data.days){
+    const rate = d.sunph ? p.rate20 : p.rate15;
+    const ph = Number(otVal(p,"plan",d)) || 0, ah = Number(otVal(p,"actual",d)) || 0;
+    r.planH += ph; r.actH += ah; r.planRM += ph*rate; r.actRM += ah*rate;
+  }
+  return r;
+}
+function otGrand(){
+  const g = {planH:0, actH:0, planRM:0, actRM:0};
+  for (const p of O.data.people){ const t = otTotals(p); for (const k in g) g[k] += t[k]; }
+  return g;
+}
+function renderOT(){
+  if (!O.data) return;
+  $("#otTitle").textContent = O.data.title;
+  const g = otGrand();
+  const pctRM = g.planRM ? g.actRM/g.planRM*100 : 0, pctH = g.planH ? g.actH/g.planH*100 : 0;
+  $("#otKpis").innerHTML = [
+    ["OT Budget (RM)", RM(g.planRM), `${O.data.total_cells ? "Sel " + O.data.total_cells.plan : ""}`],
+    ["OT Actual (RM)", RM(g.actRM), `<div class="meter"><i class="${pctRM>100?'over':''}" style="width:${Math.min(pctRM,100)}%"></i></div>${pctRM.toFixed(1)}% digunakan`],
+    ["Balance (RM)", `<span class="${g.planRM-g.actRM>=0?'var-pos':'var-neg'}">${RM(g.planRM-g.actRM)}</span>`, "Budget − Actual"],
+    ["OT hours", `${H(g.actH)} / ${H(g.planH)}`, `${pctH.toFixed(1)}% of target hours`],
+  ].map(([l,v,s]) => `<div class="kpi"><span class="label">${l}</span><span class="val">${v}</span><span class="sub">${s}</span></div>`).join("");
+  renderOTSync(g);
+  const rows = O.data.people.map(p => ({p, t: otTotals(p)})).filter(x => x.t.planH || x.t.actH);
+  const max = Math.max(1, ...rows.map(x => Math.max(x.t.planH, x.t.actH)));
+  const pc = (a,p) => p>0 ? Math.round(a/p*100) : null;
+  const pcCls = (a,p) => (a>p && p>0) ? 'var-neg' : (pc(a,p)>=85 ? 'warn' : 'var-pos');
+  $("#otBars").innerHTML = rows.map(({p,t}) => `
+    <div class="bar-row"><span class="bar-name">${esc(p.name)}</span>
+      <span class="bar-track"><span class="bar p" style="width:${t.planH/max*100}%"></span>
+      <span class="bar a ${t.actH>t.planH?'over':''}" style="width:${t.actH/max*100}%"></span></span>
+      <span class="bar-val">${H(t.planH)} hrs<br><b>${H(t.actH)} hrs</b> <b class="${pcCls(t.actH,t.planH)}">${pc(t.actH,t.planH)!=null?pc(t.actH,t.planH)+'%':'—'}</b></span></div>`).join("") + `
+    <div class="bar-row total-row"><span class="bar-name">TOTAL</span>
+      <span class="bar-track"><span class="bar p" style="width:100%"></span>
+      <span class="bar a ${g.actH>g.planH?'over':''}" style="width:${g.planH?Math.min(100,g.actH/g.planH*100):0}%"></span></span>
+      <span class="bar-val">${H(g.planH)} hrs<br><b>${H(g.actH)} hrs</b> <b class="${pcCls(g.actH,g.planH)}">${pc(g.actH,g.planH)??'—'}%</b><br><span>${RM(g.actRM)} / ${RM(g.planRM)} · <b class="${pcCls(g.actRM,g.planRM)}">${pc(g.actRM,g.planRM)??'—'}%</b></span></span></div>`;
+  $("#otSumTbl").innerHTML = `<thead><tr><th>Name</th><th class="r">Hours</th><th class="r">Budget</th><th class="r">Actual</th><th class="r">Used</th></tr></thead><tbody>` +
+    O.data.people.map(p => { const t = otTotals(p), pc = t.planRM ? t.actRM/t.planRM*100 : 0;
+      return `<tr><td>${esc(p.name)}</td><td class="r num">${H(t.actH)}/${H(t.planH)}</td><td class="r num">${RM(t.planRM)}</td><td class="r num">${RM(t.actRM)}</td><td class="r num ${pc>100?'var-neg':''}">${t.planRM?pc.toFixed(0)+'%':'—'}</td></tr>`; }).join("") +
+    `<tr class="total"><td>TOTAL</td><td class="r num">${H(g.actH)}/${H(g.planH)}</td><td class="r num">${RM(g.planRM)}</td><td class="r num">${RM(g.actRM)}</td><td class="r num">${pctRM.toFixed(0)}%</td></tr></tbody>`;
+  renderOTGrid(); renderSaveBar();
+}
+function renderOTGrid(){
+  const days = O.data.days;
+  let h = `<thead><tr><th class="who">Name</th>${days.map(d => `<th class="day ${d.sunph?'sun':''}">${d.day}${d.sunph?'<span class="lbl">SUN/PH</span>':''}</th>`).join("")}<th class="r">Hours</th><th class="r">RM</th></tr></thead><tbody>`;
+  let group = "";
+  for (const p of O.data.people){
+    if (p.group && p.group !== group){ group = p.group; h += `<tr class="group"><td class="who">${esc(group)}</td><td colspan="${days.length+2}"></td></tr>`; }
+    const t = otTotals(p);
+    for (const kind of ["plan","actual"]){
+      const row = kind === "plan" ? p.row_plan : p.row_actual;
+      h += `<tr class="${kind} ${kind==='actual'?'person-end':''}"><td class="who">${kind==='plan' ? esc(p.name) + '<span class="lbl">PLAN</span>' : '<span class="lbl" style="color:inherit">↳ ACTUAL</span>'}</td>`;
+      for (const d of days){
+        const ref = `${d.col}${row}`, v = otVal(p, kind, d), dirty = ref in O.pending;
+        h += `<td class="${d.sunph?'sun':''}">` + (kind === O.mode
+          ? `<input type="number" step="0.5" min="0" inputmode="decimal" data-ot="${ref}" value="${v ?? ""}" class="${dirty?'dirty':''}" aria-label="${esc(p.name)} ${kind} hari ${d.day}">`
+          : `<span class="num">${v ?? ""}</span>`) + `</td>`;
+      }
+      h += `<td class="tot">${H(kind==='plan'?t.planH:t.actH)}</td><td class="tot">${RM(kind==='plan'?t.planRM:t.actRM)}</td></tr>`;
+    }
+  }
+  $("#otGrid").innerHTML = h + `</tbody>`;
+}
+function budgetOTRow(){
+  if (!S.data) return null;
+  return S.data.summary.find(s => /OVERTIME|\bOT\b/i.test(s.desc)) || null;
+}
+function renderOTSync(g){
+  const r = budgetOTRow(), el = $("#otSync");
+  if (!r){ el.innerHTML = S.data ? `<span>The open budget file has no OVERTIME row in its summary.</span>` : `<span>Open a budget file (Budget tab) to send the OT total to the OVERTIME row.</span>`; return; }
+  const bp = (`M${r.row}` in S.pending) ? Number(S.pending[`M${r.row}`]) : r.plan;
+  const ba = (`N${r.row}` in S.pending) ? Number(S.pending[`N${r.row}`]) : r.actual;
+  const same = Math.abs(bp - g.planRM) < 0.01 && Math.abs(ba - g.actRM) < 0.01;
+  el.innerHTML = `<span>Budget <b>${esc(S.sheet)}</b> · OVERTIME (M${r.row}/N${r.row}): <span class="num">${RM(bp)} / ${RM(ba)}</span></span>
+    <span>MAINT <b>${esc(O.sheet)}</b>: <span class="num">${RM(g.planRM)} / ${RM(g.actRM)}</span></span>
+    ${same ? `<span class="ok">✓ Matches</span>` : `<span class="warn">Mismatch</span><button class="btn accent" id="syncBtn">Send to budget</button>`}`;
+  const b = $("#syncBtn"); if (b) b.onclick = () => pushOTToBudget(true);
+}
+function pushOTToBudget(goTo){
+  const r = budgetOTRow(); if (!r || !O.data) return false;
+  const g = otGrand();
+  const round2 = n => Math.round(n*100)/100;
+  if (r.plan_editable) { const v = round2(g.planRM); if (Math.abs(v - r.plan) < 0.005) delete S.pending[`M${r.row}`]; else S.pending[`M${r.row}`] = v; }
+  if (r.actual_editable) { const v = round2(g.actRM); if (Math.abs(v - r.actual) < 0.005) delete S.pending[`N${r.row}`]; else S.pending[`N${r.row}`] = v; }
+  render();
+  if (goTo) { switchTab("budget"); $("#summaryTbl").scrollIntoView({behavior:"smooth", block:"center"}); toast("OT total entered in the OVERTIME row — press Save to file"); }
+  renderOT();
+  return true;
+}
+document.addEventListener("change", e => {
+  const el = e.target.closest("input[data-ot]"); if (!el) return;
+  const ref = el.dataset.ot, v = el.value.trim() === "" ? "" : Number(el.value);
+  const orig = O.original[ref];
+  if (String(orig ?? "") === String(v)) delete O.pending[ref]; else O.pending[ref] = v;
+  const g = $("#otGrid").parentElement, sx = g.scrollLeft, sy = g.scrollTop, y = window.scrollY;
+  renderOT(); g.scrollLeft = sx; g.scrollTop = sy; window.scrollTo(0, y);
+});
+function applyOT(){
+  const ups = Object.entries(O.pending).map(([cell, value]) => ({cell, value}));
+  status("Python is writing OT hours to the file…", "busy");
+  setTimeout(async () => {
+    try{
+      const t0 = performance.now();
+      const who = {}; for (const p of O.data.people){ who[p.row_plan] = p.name + " (plan)"; who[p.row_actual] = p.name + " (actual)"; }
+      const dayOf = Object.fromEntries(O.data.days.map(d => [d.col, d.day]));
+      O.bytes = await pyCall("_ot_apply", O.bytes, O.sheet, JSON.stringify(ups));
+      const now = new Date().toLocaleTimeString("en-MY", {hour:"2-digit", minute:"2-digit"});
+      for (const u of ups){ const m = u.cell.match(/^([A-Z]+)(\d+)$/);
+        S.log.push({t: now, file: "OT", sheet: O.sheet, cell: u.cell, item: `${who[+m[2]]||""} · day ${dayOf[m[1]]}`, from: O.original[u.cell], to: u.value}); }
+      await loadOTSheet(); renderLog();
+      postToParent("ot", "save");
+      const synced = pushOTToBudget(false);
+      status(`${ups.length} OT cell(s) updated in ${Math.round(performance.now()-t0)} ms` + (synced ? " · OT total entered in budget (not yet saved)" : ""), "ok");
+      toast(synced ? "OT saved · OT total sent to the budget OVERTIME row" : `${ups.length} OT change(s) saved`);
+    }catch(e){ console.error(e); status("OT save failed: " + e.message, ""); }
+  }, 20);
+}
+$("#otSheetSel").onchange = e => {
+  if (Object.keys(O.pending).length) { toast("Save or discard your changes first"); e.target.value = O.sheet; return; }
+  O.sheet = e.target.value; loadOTSheet().catch(err => { console.error(err); status("Failed to read OT sheet: " + err.message, ""); });
+};
+document.querySelectorAll("#tab-ot .seg button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#tab-ot .seg button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  O.mode = b.dataset.m; renderOTGrid();
+});
+$("#otFileIn").onchange = e => readOTFile(e.target.files[0]);
+$("#otDlBtn").onclick = async () => {
+  if (Object.keys(O.pending).length) { toast("You have unsaved changes — press Save to file first"); return; }
+  try{
+    let out = O.bytes;
+    if (O.enc) { status("Re-encrypting with the original password…", "busy"); out = await pyCall("_encrypt", O.bytes, O.password); status("OT file ready (password-protected as original)", "ok"); }
+    saveFile(out, O.fileName);
+  }catch(e){ console.error(e); status("Download failed: " + e.message, ""); }
+};
+
+if (window.parent !== window) document.body.classList.add("embedded");
+(async () => {
+  try { await bootPython(); } catch(e){ status("Failed to load Pyodide — internet required (cdn.jsdelivr.net).", ""); console.error(e); return; }
+  const fromB64 = b64 => { const bin = atob(b64), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return u8; };
+  const sample = $("#sampleData"), b64 = sample.textContent.trim();
+  const otSample = $("#otSampleData"), ob64 = otSample.textContent.trim();
+  if (ob64 && !ob64.startsWith("__")) loadOTRaw(fromB64(ob64), otSample.dataset.name);
+  if (b64 && !b64.startsWith("__")) loadBytes(fromB64(b64), sample.dataset.name);
+  else { drop.hidden = false; status("Python engine ready — upload a budget file to start", "ok"); }
+})();
+</script>
+</body>
+</html>

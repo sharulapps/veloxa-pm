@@ -1,0 +1,25 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Node (if you ever add tooling)
+node_modules/
+npm-debug.log*
+
+# Wrangler / Cloudflare local state
+.wrangler/
+.dev.vars
+
+# Secrets — never commit
+*.env
+.env*
+serviceAccount*.json
+*-service-account*.json
+
+# Scratch
+*.bak
+*.orig
+tmp/

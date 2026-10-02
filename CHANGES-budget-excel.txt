@@ -1,0 +1,25 @@
+VELOXA - Excel Plan vs Actual (25 Sep 2026)
+===========================================
+BERUBAH : app.html            (butang Budget Monitor + script tag)
+BARU    : veloxa-budget-excel.js, budget-excel.html
+LAIN    : fail lain sama macam asal
+
+LANGKAH:
+1. Upload semua fail (root) ke Cloudflare Pages
+2. Firestore rules: TAK PERLU UBAH (rules live dah benarkan semua user login read/write)
+   _extra/FIRESTORE_RULES_ketat_v2_optional.txt = versi lebih ketat, optional, test dulu
+3. (Optional) Firestore settings/company > tambah field otFilePassword = "MAINT1"
+4. Test: admin + engineer > Dashboard > Budget Monitor > "Excel Plan vs Actual"
+
+_extra/ = source Python engine + dokumentasi (tak perlu upload)
+
+UPDATE 2 (25 Sep, petang)
+- Budget Monitor: seksyen "Excel - Plan vs Actual ikut kategori" + table Ringkasan (Baki, % Guna)
+- OT: kotak ringkasan (jam, % jam, RM, % RM), bar setiap orang dengan %, baris JUMLAH KESELURUHAN
+- Butang "📊 Excel" di topbar + menu ⋯ project
+- Module: chart OT ikut orang ada % + baris JUMLAH
+
+UPDATE 3
+- Budget Monitor: senarai Category diganti dengan detail kategori Excel (bila bulan tu dah sync)
+  Bulan yang belum sync kekal guna senarai Category asal (+ Add)
+- Blok bawah: Ringkasan Excel sahaja (Plan / Actual / Baki / Guna %)
