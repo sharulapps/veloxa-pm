@@ -35,3 +35,13 @@
 - admin.html: Users table column "Project" relabelled "Plant" (it shows `u.plant`).
 - admin.html: Save Settings now merges into `settings/company` instead of overwriting it (previously wiped fields such as `otFilePassword`).
 - `firestore.rules`: draft with the paths the app now uses (sub-subtasks, subtask comments, amendments, notifications, sticky notes, settings). Not published.
+
+## 2026-10-02 (mobile)
+
+**Mobile responsive (≤768px)**
+- `index.html`: login card fits narrow screens (was fixed 400px, clipped); page scrolls when the keyboard is open.
+- `admin.html`: compact topbar, 2-column stats, scrollable tab bar, tables scroll sideways inside their card, single-column forms, Settings and Edit modal fit the screen.
+- `exec.html`: KPI cards 2 per row, all widgets single column (≤900px), topbar shows avatar only.
+- `app.html`: task detail / subtask panel is full screen; Add Task fields stack; MOM modal header and fields stack; Dashboard and Budget Monitor no longer cut off on the right; floating 🤖/📝 buttons hide while a modal, detail panel, chat or sidebar is open.
+- Inputs use 16px on phones so iOS Safari doesn't zoom in on focus.
+- Fixes (desktop too): MOM modal Cancel button text was invisible; admin Settings Reset/Save buttons were unstyled.

@@ -101,6 +101,30 @@ body{font-family:'Inter',sans-serif;background:#0a0f1e;color:white;min-height:10
 .spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,0.1);border-top-color:#1a56db;border-radius:50%;animation:spin 0.7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{font-size:13px;color:rgba(255,255,255,0.3)}
+.widget{min-width:0}
+/* ===== MOBILE ===== */
+@media (max-width: 900px) {
+  .kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid-row,.grid-row-3{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width: 768px) {
+  .topbar{padding:0 12px;gap:8px}
+  .logo-name{font-size:16px;letter-spacing:2px}
+  .topbar-right{gap:6px}
+  .user-pill{padding:4px}
+  .user-pill>div:last-child{display:none}
+  .btn-refresh,.btn-logout{padding:6px 10px;white-space:nowrap}
+  .page{padding:16px 12px}
+  .page-header{flex-direction:column;gap:6px;margin-bottom:16px}
+  .page-title{font-size:22px}
+  .kpi-row{gap:8px;margin-bottom:12px}
+  .kpi-card{padding:14px}
+  .kpi-num{font-size:28px}
+  .grid-row,.grid-row-3{gap:12px;margin-bottom:12px}
+  .widget{padding:14px}
+  .amd-header{flex-wrap:wrap}
+  .amd-time{margin-left:0;width:100%}
+}
 </style>
 </head>
 <body>

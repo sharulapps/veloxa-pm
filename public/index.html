@@ -16,7 +16,7 @@ body{font-family:'Inter',sans-serif;min-height:100vh;background:radial-gradient(
 .b1{width:500px;height:500px;background:#1a3a7a;top:-150px;left:-150px}
 .b2{width:400px;height:400px;background:#0f2d5c;bottom:-100px;right:-100px}
 .b3{width:250px;height:250px;background:#1e4080;top:40%;left:55%}
-.card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:40px;width:400px;position:relative;z-index:1;backdrop-filter:blur(20px);box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:40px;width:100%;max-width:400px;position:relative;z-index:1;backdrop-filter:blur(20px);box-shadow:0 20px 60px rgba(0,0,0,0.5)}
 .logo-wrap{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:28px}
 .logo-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:28px;letter-spacing:3px;color:#fff}
 .card-title{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;text-align:center;color:rgba(255,255,255,0.9);margin-bottom:4px}
@@ -51,6 +51,12 @@ body{font-family:'Inter',sans-serif;min-height:100vh;background:radial-gradient(
 .btn-sec{flex:1;padding:10px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:9px;color:rgba(255,255,255,0.5);font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif}
 .btn-sec:hover{background:rgba(255,255,255,0.05)}
 .btn-pri{flex:1;padding:10px;background:linear-gradient(135deg,#1a56db,#2563eb);border:none;border-radius:9px;color:white;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+/* ===== MOBILE ===== */
+@media (max-width: 480px) {
+  body{padding:16px;overflow-x:hidden;overflow-y:auto}
+  .card{padding:28px 20px}
+  input{font-size:16px!important}
+}
 </style>
 </head>
 <body>
